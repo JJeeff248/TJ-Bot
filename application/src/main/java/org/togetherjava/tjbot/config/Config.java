@@ -23,16 +23,19 @@ public final class Config {
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
+    private final String wolframAlphaAppId;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
-            @JsonProperty("discordGuildInvite") String discordGuildInvite) {
+            @JsonProperty("discordGuildInvite") String discordGuildInvite,
+            @JsonProperty("wolframAlphaAppId") String wolframAlphaAppId) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
+        this.wolframAlphaAppId = wolframAlphaAppId;
     }
 
     /**
@@ -93,5 +96,14 @@ public final class Config {
      */
     public String getDiscordGuildInvite() {
         return discordGuildInvite;
+    }
+
+    /**
+     * Gets the application ID used to connect to the WolframAlpha API.
+     *
+     * @return the application ID for the WolframAlpha API
+     */
+    public String getWolframAlphaAppId() {
+        return wolframAlphaAppId;
     }
 }
