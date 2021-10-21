@@ -7,8 +7,9 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
 import org.togetherjava.tjbot.config.Config;
@@ -21,18 +22,18 @@ import java.net.http.HttpResponse;
 import java.util.Objects;
 
 public final class WolframAlphaCommand extends SlashCommandAdapter {
+    public static final int HTTP_STATUS_CODE_OK = 200;
     private static final XmlMapper XML = new XmlMapper();
     private static final String QUERY_OPTION = "query";
     /**
      * WolframAlpha API endpoint to connect to.
-     * 
+     *
      * @see <a href=
-     *      "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
-     *      Reference</a>.
+     * "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
+     * Reference</a>.
      */
     private static final String API_ENDPOINT = "http://api.wolframalpha.com/v2/query";
-    public static final int HTTP_STATUS_CODE_OK = 200;
-
+    private static final Logger logger = LoggerFactory.getLogger(WolframAlphaCommand.class);
     private final HttpClient client = HttpClient.newHttpClient();
 
     public WolframAlphaCommand() {
@@ -42,37 +43,30 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                 true);
     }
 
-    @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+
+    @Override public void onSlashCommand(@NotNull SlashCommandEvent event) {
         String query = Objects.requireNonNull(event.getOption(QUERY_OPTION)).getAsString();
 
         // Send query
-        HttpRequest request = HttpRequest
-            .newBuilder(UrlBuilder.fromString(API_ENDPOINT)
+        HttpRequest request = HttpRequest.newBuilder(UrlBuilder.fromString(API_ENDPOINT)
                 .addParameter("appid", Config.getInstance().getWolframAlphaAppId())
                 .addParameter("format", "image,plaintext")
                 .addParameter("input", query)
-                .toUri())
-            .GET()
-            .build();
+                .toUri()).GET().build();
 
         HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            // TODO Respond to user and possibly also log something
-            e.printStackTrace(); // TODO Remove me afterwards
-            return;
-        } catch (InterruptedException e) {
-            // TODO Respond to user and possibly also log something
-            e.printStackTrace(); // TODO Remove me afterwards
-            Thread.currentThread().interrupt();
+        } catch (IOException | InterruptedException e) {
+            event.reply("Unable to get a response from the server").setEphemeral(true).queue();
+            logger.error("Could not get the response from the server", e);
             return;
         }
 
         if (response.statusCode() != HTTP_STATUS_CODE_OK) {
-            // TODO Respond to user and also log something, errors can be extracted from the result
-            System.err.println("not OK"); // TODO Remove me afterwards
+            event.reply("The response' status code was incorrect").setEphemeral(true).queue();
+            logger.warn("Unexpected status code: Expected: {} Actual: {}", HTTP_STATUS_CODE_OK,
+                    response.statusCode());
             return;
         }
 
@@ -81,14 +75,14 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         try {
             result = XML.readValue(response.body(), QueryResult.class);
         } catch (JsonProcessingException e) {
-            // TODO Respond to user and also log something
-            e.printStackTrace(); // TODO Remove me afterwards
+            event.reply("Could not serialize the XML recieved").setEphemeral(true).queue();
+            logger.error("Error in serializing the class ", e);
             return;
         }
 
         if (!result.isSuccess()) {
-            // TODO Respond to user and also log something, errors can be extracted from the result
-            System.err.println("not successful"); // TODO Remove me afterwards
+            event.reply("Could not successfully receive the result").setEphemeral(true).queue();
+            logger.error("Not a successful result ");
 
             // TODO The exact error details have a different POJO structure,
             // POJOs have to be added to get those details. See the Wolfram doc.
@@ -113,8 +107,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     // see Wolfram doc)
                     action = action.addFile(new URL(image.getSource()).openStream(), name);
                 } catch (IOException e) {
-                    // TODO Respond to user and also log something
-                    e.printStackTrace(); // TODO Remove me afterwards
+                    event.reply("There was an error in generating the images").setEphemeral(true).queue();
+                    logger.error("Could not get image source url " , e);
                     return;
                 }
             }
