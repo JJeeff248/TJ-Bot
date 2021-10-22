@@ -29,42 +29,56 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
      * WolframAlpha API endpoint to connect to.
      *
      * @see <a href=
-     * "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
-     * Reference</a>.
+     *      "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
+     *      Reference</a>.
      */
     private static final String API_ENDPOINT = "http://api.wolframalpha.com/v2/query";
     private static final Logger logger = LoggerFactory.getLogger(WolframAlphaCommand.class);
     private final HttpClient client = HttpClient.newHttpClient();
 
     public WolframAlphaCommand() {
-        super("wolframalpha", "Renders mathematical queries using WolframAlpha",
+        super("wolf", "Renders mathematical queries using WolframAlpha",
                 SlashCommandVisibility.GUILD);
         getData().addOption(OptionType.STRING, QUERY_OPTION, "the query to send to WolframAlpha",
                 true);
     }
 
 
-    @Override public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    @Override
+    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+
+        // The processing takes some time
+        event.deferReply().queue();
+
         String query = Objects.requireNonNull(event.getOption(QUERY_OPTION)).getAsString();
 
         // Send query
-        HttpRequest request = HttpRequest.newBuilder(UrlBuilder.fromString(API_ENDPOINT)
+        HttpRequest request = HttpRequest
+            .newBuilder(UrlBuilder.fromString(API_ENDPOINT)
                 .addParameter("appid", Config.getInstance().getWolframAlphaAppId())
                 .addParameter("format", "image,plaintext")
                 .addParameter("input", query)
-                .toUri()).GET().build();
+                .toUri())
+            .GET()
+            .build();
 
         HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
-            event.reply("Unable to get a response from the server").setEphemeral(true).queue();
+            event.getHook()
+                .setEphemeral(true)
+                .editOriginal("Unable to get a response from the server")
+                .queue();
             logger.error("Could not get the response from the server", e);
             return;
         }
 
         if (response.statusCode() != HTTP_STATUS_CODE_OK) {
-            event.reply("The response' status code was incorrect").setEphemeral(true).queue();
+            event.getHook()
+                .setEphemeral(true)
+                .editOriginal("The response' status code was incorrect")
+                .queue();
             logger.warn("Unexpected status code: Expected: {} Actual: {}", HTTP_STATUS_CODE_OK,
                     response.statusCode());
             return;
@@ -75,13 +89,19 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         try {
             result = XML.readValue(response.body(), QueryResult.class);
         } catch (JsonProcessingException e) {
-            event.reply("Could not serialize the XML recieved").setEphemeral(true).queue();
+            event.getHook()
+                .setEphemeral(true)
+                .editOriginal("Could not serialize the XML recieved")
+                .queue();
             logger.error("Error in serializing the class ", e);
             return;
         }
 
         if (!result.isSuccess()) {
-            event.reply("Could not successfully receive the result").setEphemeral(true).queue();
+            event.getHook()
+                .setEphemeral(true)
+                .editOriginal("Could not successfully receive the result")
+                .queue();
             logger.error("Not a successful result ");
 
             // TODO The exact error details have a different POJO structure,
@@ -89,8 +109,6 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             return;
         }
 
-        // Building takes a bit since we have to read all the images
-        event.deferReply().queue();
 
         // Create result
         WebhookMessageUpdateAction<Message> action =
@@ -107,8 +125,10 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     // see Wolfram doc)
                     action = action.addFile(new URL(image.getSource()).openStream(), name);
                 } catch (IOException e) {
-                    event.reply("There was an error in generating the images").setEphemeral(true).queue();
-                    logger.error("Could not get image source url " , e);
+                    event.reply("There was an error in generating the images")
+                        .setEphemeral(true)
+                        .queue();
+                    logger.error("Could not get image source url ", e);
                     return;
                 }
             }
