@@ -13,6 +13,7 @@ import java.util.List;
 
 @JsonRootName("pod")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@SuppressWarnings("unused")
 final class Pod {
     @JacksonXmlProperty(isAttribute = true)
     private String title;

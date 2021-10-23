@@ -4,9 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+
 @JsonRootName("img")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class Image {
+@SuppressWarnings("unused")
+final class WolfImage {
     @JacksonXmlProperty(isAttribute = true, localName = "src")
     private String source;
     @JacksonXmlProperty(isAttribute = true)

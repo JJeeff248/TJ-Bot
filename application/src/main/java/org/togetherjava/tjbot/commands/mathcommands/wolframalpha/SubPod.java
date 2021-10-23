@@ -7,12 +7,13 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 @JsonRootName("subpod")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@SuppressWarnings("unused")
 final class SubPod {
     @JacksonXmlProperty(isAttribute = true)
     private String title;
 
     @JsonProperty("img")
-    private Image image;
+    private WolfImage image;
     @JsonProperty("plaintext")
     private PlainText plainText;
 
@@ -24,11 +25,11 @@ final class SubPod {
         this.title = title;
     }
 
-    public Image getImage() {
+    public WolfImage getImage() {
         return image;
     }
 
-    public void setImage(Image image) {
+    public void setImage(WolfImage image) {
         this.image = image;
     }
 

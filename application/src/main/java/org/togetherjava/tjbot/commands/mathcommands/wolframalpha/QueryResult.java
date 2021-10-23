@@ -12,6 +12,7 @@ import java.util.List;
 
 @JsonRootName("queryresult")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@SuppressWarnings("unused")
 final class QueryResult {
     @JacksonXmlProperty(isAttribute = true)
     private boolean success;
