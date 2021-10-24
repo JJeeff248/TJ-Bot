@@ -1,6 +1,5 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -9,12 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("unused")
-@JsonRootName("tips")
-@JsonIgnoreProperties(ignoreUnknown = true)
+@SuppressWarnings("unused") @JsonRootName("tips") @JsonIgnoreProperties(ignoreUnknown = true)
 public class Tips {
-    @JacksonXmlProperty(isAttribute = true)
-    int count;
+    @JacksonXmlProperty(isAttribute = true) int count;
     List<Tip> tips;
 
     public int getCount() {
@@ -31,5 +27,11 @@ public class Tips {
 
     public void setTips(List<Tip> tips) {
         this.tips = new ArrayList<>(tips);
+    }
+
+    @Override public String toString() {
+        StringBuilder sb = new StringBuilder();
+        tips.forEach(x -> sb.append(x).append("\n"));
+        return count + " tips:\n" + sb;
     }
 }

@@ -34,7 +34,7 @@ final class QueryResult {
     private boolean parseTimedOut;
     @JacksonXmlProperty(isAttribute = true, localName = "recalculate")
     private String recalculateUrl;
-
+    private Tips tips;
     @JsonProperty("pod")
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<Pod> pods;
@@ -83,6 +83,10 @@ final class QueryResult {
         return Collections.unmodifiableList(pods);
     }
 
+    public Tips getTips() {
+        return tips;
+    }
+
     public void setSuccess(boolean success) {
         this.success = success;
     }
@@ -125,5 +129,9 @@ final class QueryResult {
 
     public void setPods(List<Pod> pods) {
         this.pods = new ArrayList<>(pods);
+    }
+
+    public void setTips(Tips tips) {
+        this.tips = tips;
     }
 }
