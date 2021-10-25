@@ -28,10 +28,9 @@ public class Tips {
     public void setTips(List<Tip> tips) {
         this.tips = new ArrayList<>(tips);
     }
-
-    @Override public String toString() {
+    public String toMessage() {
         StringBuilder sb = new StringBuilder();
         tips.forEach(x -> sb.append(x).append("\n"));
-        return count + " tips:\n" + sb;
+        return count == 0 ? "" : count + " tips:\n" + sb;
     }
 }

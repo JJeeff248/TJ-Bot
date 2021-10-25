@@ -27,8 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class WolframAlphaCommand extends SlashCommandAdapter {
-    public static final int HTTP_STATUS_CODE_OK = 200;
+public final class WolframAlphaCommand extends SlashCommandAdapter {
+    private static final int HTTP_STATUS_CODE_OK = 200;
     private static final XmlMapper XML = new XmlMapper();
     private static final String QUERY_OPTION = "query";
     /**
@@ -40,7 +40,10 @@ public class WolframAlphaCommand extends SlashCommandAdapter {
      */
     private static final String API_ENDPOINT = "http://api.wolframalpha.com/v2/query";
     private static final Logger logger = LoggerFactory.getLogger(WolframAlphaCommand.class);
-    private static final int HEIGHT_LIMIT = 300;
+    /**
+     * Maximum height in pixels possible without discord scaling the images.
+     */
+    private static final int HEIGHT_LIMIT_PX = 300;
     private final HttpClient client = HttpClient.newHttpClient();
 
     public WolframAlphaCommand() {
@@ -54,11 +57,11 @@ public class WolframAlphaCommand extends SlashCommandAdapter {
             throws IOException {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics imgGraphics = image.getGraphics();
-        int currHeight = 0;
+        int resultHeight = 0;
         for (String str : urls) {
-            java.awt.Image currImage = ImageIO.read(new URL(str));
-            imgGraphics.drawImage(currImage, width, currHeight, null);
-            currHeight += currImage.getHeight(null);
+            Image resultImage = ImageIO.read(new URL(str));
+            imgGraphics.drawImage(resultImage, width, resultHeight, null);
+            resultHeight += resultImage.getHeight(null);
         }
         ByteArrayOutputStream imageStream = new ByteArrayOutputStream();
         ImageIO.write(image, "gif", imageStream);
@@ -82,12 +85,20 @@ public class WolframAlphaCommand extends SlashCommandAdapter {
         HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             event.getHook()
                     .setEphemeral(true)
-                    .editOriginal("Unable to get a response from the server")
+                    .editOriginal("Unable to get a response from WolframAlpha API")
                     .queue();
             logger.error("Could not get the response from the server", e);
+            return;
+        } catch (InterruptedException e) {
+            event.getHook()
+                    .setEphemeral(true)
+                    .editOriginal("Connection to WolframAlpha was interrupted")
+                    .queue();
+            logger.info("Connection to WolframAlpha was interrupted", e);
+            Thread.currentThread().interrupt();
             return;
         }
 
@@ -108,18 +119,19 @@ public class WolframAlphaCommand extends SlashCommandAdapter {
         } catch (JsonProcessingException e) {
             event.getHook()
                     .setEphemeral(true)
-                    .editOriginal("Could not serialize the XML recieved")
+                    .editOriginal("Unexpected response from WolframAlpha API")
                     .queue();
-            logger.error("Error in serializing the class ", e);
+            logger.error("Unable to deserialize the class ", e);
             return;
         }
 
         if (!result.isSuccess()) {
             event.getHook()
                     .setEphemeral(true)
-                    .editOriginal("Could not successfully receive the result %s".formatted(result.getTips()))
+                    .editOriginal("Could not successfully receive the result %s".formatted(
+                            result.getTips().toMessage()))
                     .queue();
-            logger.error("Not a successful result {}", result.getTips());
+            logger.info("User query could not be processed {}", result.getTips().toMessage());
 
             // TODO The exact error details have a different POJO structure,
             // POJOs have to be added to get those details. See the Wolfram doc.
@@ -132,7 +144,7 @@ public class WolframAlphaCommand extends SlashCommandAdapter {
                 event.getHook().editOriginal("Computed in: " + result.getTiming());
         for (Pod pod : result.getPods()) {
             List<String> urls = new ArrayList<>();
-            int totalHeight = 0;
+            int currentHeight = 0;
             for (SubPod subPod : pod.getSubPods()) {
                 WolfImage image = subPod.getImage();
                 try {
@@ -140,21 +152,27 @@ public class WolframAlphaCommand extends SlashCommandAdapter {
                     if (name.isEmpty()) {
                         name = pod.getTitle();
                     }
-                    if (totalHeight + image.getHeight() > HEIGHT_LIMIT) {
-                        action = action.addFile(combineImages(urls, image.getWidth(), totalHeight),
-                                name);
-                        totalHeight = 0;
+                    if (currentHeight + image.getHeight() > HEIGHT_LIMIT_PX) {
+                        action =
+                                action.addFile(combineImages(urls, image.getWidth(), currentHeight),
+                                        name);
+                        currentHeight = 0;
+                    } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
+                        action = action.addFile(
+                                combineImages(List.of(image.getSource()), image.getWidth(),
+                                        image.getHeight()), name);
                     }
-                    totalHeight += image.getHeight();
+                    currentHeight += image.getHeight();
                     urls.add(image.getSource());
 
                     // TODO Figure out how to tell JDA that those are gifs (but sometimes also JPEG,
                     // see Wolfram doc)
                 } catch (IOException e) {
-                    event.reply("There was an error in generating the images")
+                    event.reply("Unable to generate message based on the WolframAlpha response")
                             .setEphemeral(true)
                             .queue();
-                    logger.error("Could not get image source url ", e);
+                    logger.error("Failed to read image {} from the WolframAlpha response", image,
+                            e);
                     return;
                 }
             }
