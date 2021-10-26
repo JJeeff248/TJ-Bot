@@ -43,7 +43,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
     /**
      * Maximum height in pixels possible without discord scaling the images.
      */
-    private static final int HEIGHT_LIMIT_PX = 300;
+    private static final int MAX_IMAGE_HEIGHT_PX = 300;
     private final HttpClient client = HttpClient.newHttpClient();
 
     public WolframAlphaCommand() {
@@ -75,13 +75,30 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
         String query = Objects.requireNonNull(event.getOption(QUERY_OPTION)).getAsString();
 
-        // Send query
-        HttpRequest request = HttpRequest.newBuilder(UrlBuilder.fromString(API_ENDPOINT)
-                .addParameter("appid", Config.getInstance().getWolframAlphaAppId())
-                .addParameter("format", "image,plaintext")
-                .addParameter("input", query)
-                .toUri()).GET().build();
+        HttpRequest request = sendQuery(query);
 
+        HttpResponse<String> response;
+        try {
+            response = getResponse(event, request);
+        } catch (AssertionError e) {
+            return;
+        }
+
+        QueryResult result;
+        try {
+            result = parseQuery(response, event);
+        } catch (AssertionError e) {
+            return;
+        }
+
+        try {
+            createResult(result, event).queue();
+        } catch (AssertionError ignored) {
+        }
+    }
+
+    private HttpResponse<String> getResponse(SlashCommandEvent event, HttpRequest request)
+            throws AssertionError {
         HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -90,8 +107,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .setEphemeral(true)
                     .editOriginal("Unable to get a response from WolframAlpha API")
                     .queue();
-            logger.error("Could not get the response from the server", e);
-            return;
+            logger.warn("Could not get the response from the server", e);
+            throw new AssertionError();
         } catch (InterruptedException e) {
             event.getHook()
                     .setEphemeral(true)
@@ -99,7 +116,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .queue();
             logger.info("Connection to WolframAlpha was interrupted", e);
             Thread.currentThread().interrupt();
-            return;
+            throw new AssertionError();
         }
 
         if (response.statusCode() != HTTP_STATUS_CODE_OK) {
@@ -109,10 +126,22 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .queue();
             logger.warn("Unexpected status code: Expected: {} Actual: {}", HTTP_STATUS_CODE_OK,
                     response.statusCode());
-            return;
+            throw new AssertionError();
         }
+        return response;
+    }
 
-        // Parse query
+    private HttpRequest sendQuery(String query) {
+        return HttpRequest.newBuilder(UrlBuilder.fromString(API_ENDPOINT)
+                .addParameter("appid", Config.getInstance().getWolframAlphaAppId())
+                .addParameter("format", "image,plaintext")
+                .addParameter("input", query)
+                .toUri()).GET().build();
+
+    }
+
+    private QueryResult parseQuery(HttpResponse<String> response, SlashCommandEvent event)
+            throws AssertionError {
         QueryResult result;
         try {
             result = XML.readValue(response.body(), QueryResult.class);
@@ -122,7 +151,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .editOriginal("Unexpected response from WolframAlpha API")
                     .queue();
             logger.error("Unable to deserialize the class ", e);
-            return;
+            throw new AssertionError();
         }
 
         if (!result.isSuccess()) {
@@ -131,20 +160,21 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .editOriginal("Could not successfully receive the result %s".formatted(
                             result.getTips().toMessage()))
                     .queue();
-            logger.info("User query could not be processed {}", result.getTips().toMessage());
 
             // TODO The exact error details have a different POJO structure,
             // POJOs have to be added to get those details. See the Wolfram doc.
-            return;
+            throw new AssertionError();
         }
+        return result;
+    }
 
-
-        // Create result
+    private WebhookMessageUpdateAction<Message> createResult(QueryResult result,
+            SlashCommandEvent event) {
         WebhookMessageUpdateAction<Message> action =
                 event.getHook().editOriginal("Computed in: " + result.getTiming());
         for (Pod pod : result.getPods()) {
-            List<String> urls = new ArrayList<>();
-            int currentHeight = 0;
+            List<String> imageURLs = new ArrayList<>();
+            int resultHeight = 0;
             for (SubPod subPod : pod.getSubPods()) {
                 WolfImage image = subPod.getImage();
                 try {
@@ -152,18 +182,18 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     if (name.isEmpty()) {
                         name = pod.getTitle();
                     }
-                    if (currentHeight + image.getHeight() > HEIGHT_LIMIT_PX) {
+                    if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
                         action =
-                                action.addFile(combineImages(urls, image.getWidth(), currentHeight),
+                                action.addFile(combineImages(imageURLs, image.getWidth(), resultHeight),
                                         name);
-                        currentHeight = 0;
+                        resultHeight = 0;
                     } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
                         action = action.addFile(
                                 combineImages(List.of(image.getSource()), image.getWidth(),
                                         image.getHeight()), name);
                     }
-                    currentHeight += image.getHeight();
-                    urls.add(image.getSource());
+                    resultHeight += image.getHeight();
+                    imageURLs.add(image.getSource());
 
                     // TODO Figure out how to tell JDA that those are gifs (but sometimes also JPEG,
                     // see Wolfram doc)
@@ -173,10 +203,10 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             .queue();
                     logger.error("Failed to read image {} from the WolframAlpha response", image,
                             e);
-                    return;
+                    throw new AssertionError();
                 }
             }
         }
-        action.queue();
+        return action;
     }
 }
