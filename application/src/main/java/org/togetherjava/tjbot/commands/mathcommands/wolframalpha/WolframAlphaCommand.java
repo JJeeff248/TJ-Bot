@@ -72,26 +72,12 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
         // The processing takes some time
         event.deferReply().queue();
-
         String query = Objects.requireNonNull(event.getOption(QUERY_OPTION)).getAsString();
-
         HttpRequest request = sendQuery(query);
-
         HttpResponse<String> response;
         try {
             response = getResponse(event, request);
-        } catch (AssertionError e) {
-            return;
-        }
-
-        QueryResult result;
-        try {
-            result = parseQuery(response, event);
-        } catch (AssertionError e) {
-            return;
-        }
-
-        try {
+            QueryResult result = parseQuery(response, event);
             createResult(result, event).queue();
         } catch (AssertionError ignored) {
         }
@@ -183,9 +169,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                         name = pod.getTitle();
                     }
                     if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
-                        action =
-                                action.addFile(combineImages(imageURLs, image.getWidth(), resultHeight),
-                                        name);
+                        action = action.addFile(
+                                combineImages(imageURLs, image.getWidth(), resultHeight), name);
                         resultHeight = 0;
                     } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
                         action = action.addFile(
