@@ -8,9 +8,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("unused") @JsonRootName("tips") @JsonIgnoreProperties(ignoreUnknown = true)
+@SuppressWarnings("unused")
+@JsonRootName("tips")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Tips {
-    @JacksonXmlProperty(isAttribute = true) int count;
+    @JacksonXmlProperty(isAttribute = true)
+    int count;
     List<Tip> tips;
 
     public int getCount() {
@@ -28,6 +31,7 @@ public class Tips {
     public void setTips(List<Tip> tips) {
         this.tips = new ArrayList<>(tips);
     }
+
     public String toMessage() {
         StringBuilder sb = new StringBuilder();
         tips.forEach(x -> sb.append(x).append("\n"));

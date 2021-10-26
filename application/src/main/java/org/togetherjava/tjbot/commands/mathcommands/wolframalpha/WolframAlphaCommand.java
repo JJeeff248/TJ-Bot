@@ -37,14 +37,11 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
      * WolframAlpha API endpoint to connect to.
      *
      * @see <a href=
-     * "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
-     * Reference</a>.
+     *      "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
+     *      Reference</a>.
      */
     private static final String API_ENDPOINT = "http://api.wolframalpha.com/v2/query";
     private static final Logger logger = LoggerFactory.getLogger(WolframAlphaCommand.class);
-    /**
-     * Maximum height in pixels possible without discord scaling the images.
-     */
     private static final int MAX_IMAGE_HEIGHT_PX = 300;
     private final HttpClient client = HttpClient.newHttpClient();
 
@@ -70,7 +67,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         return imageStream.toByteArray();
     }
 
-    @Override public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    @Override
+    public void onSlashCommand(@NotNull SlashCommandEvent event) {
 
         // The processing takes some time
         event.deferReply().queue();
@@ -88,23 +86,23 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         optAction.ifPresent(RestAction::queue);
     }
 
-    private Optional<HttpResponse<String>> getResponse(SlashCommandEvent event, HttpRequest request)
-            throws AssertionError {
+    private @NotNull Optional<HttpResponse<String>> getResponse(@NotNull SlashCommandEvent event,
+            @NotNull HttpRequest request) throws AssertionError {
         HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException e) {
             event.getHook()
-                    .setEphemeral(true)
-                    .editOriginal("Unable to get a response from WolframAlpha API")
-                    .queue();
+                .setEphemeral(true)
+                .editOriginal("Unable to get a response from WolframAlpha API")
+                .queue();
             logger.warn("Could not get the response from the server", e);
             return Optional.empty();
         } catch (InterruptedException e) {
             event.getHook()
-                    .setEphemeral(true)
-                    .editOriginal("Connection to WolframAlpha was interrupted")
-                    .queue();
+                .setEphemeral(true)
+                .editOriginal("Connection to WolframAlpha was interrupted")
+                .queue();
             logger.info("Connection to WolframAlpha was interrupted", e);
             Thread.currentThread().interrupt();
             return Optional.empty();
@@ -112,9 +110,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
         if (response.statusCode() != HTTP_STATUS_CODE_OK) {
             event.getHook()
-                    .setEphemeral(true)
-                    .editOriginal("The response' status code was incorrect")
-                    .queue();
+                .setEphemeral(true)
+                .editOriginal("The response' status code was incorrect")
+                .queue();
             logger.warn("Unexpected status code: Expected: {} Actual: {}", HTTP_STATUS_CODE_OK,
                     response.statusCode());
             return Optional.empty();
@@ -122,35 +120,38 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         return Optional.of(response);
     }
 
-    private HttpRequest sendQuery(String query) {
-        return HttpRequest.newBuilder(UrlBuilder.fromString(API_ENDPOINT)
+    private @NotNull HttpRequest sendQuery(@NotNull String query) {
+        return HttpRequest
+            .newBuilder(UrlBuilder.fromString(API_ENDPOINT)
                 .addParameter("appid", Config.getInstance().getWolframAlphaAppId())
                 .addParameter("format", "image,plaintext")
                 .addParameter("input", query)
-                .toUri()).GET().build();
+                .toUri())
+            .GET()
+            .build();
 
     }
 
-    private Optional<QueryResult> parseQuery(HttpResponse<String> response, SlashCommandEvent event)
-            throws AssertionError {
+    private @NotNull Optional<QueryResult> parseQuery(@NotNull HttpResponse<String> response,
+            @NotNull SlashCommandEvent event) throws AssertionError {
         QueryResult result;
         try {
             result = XML.readValue(response.body(), QueryResult.class);
         } catch (JsonProcessingException e) {
             event.getHook()
-                    .setEphemeral(true)
-                    .editOriginal("Unexpected response from WolframAlpha API")
-                    .queue();
+                .setEphemeral(true)
+                .editOriginal("Unexpected response from WolframAlpha API")
+                .queue();
             logger.error("Unable to deserialize the class ", e);
             return Optional.empty();
         }
 
         if (!result.isSuccess()) {
             event.getHook()
-                    .setEphemeral(true)
-                    .editOriginal("Could not successfully receive the result %s".formatted(
-                            result.getTips().toMessage()))
-                    .queue();
+                .setEphemeral(true)
+                .editOriginal("Could not successfully receive the result %s"
+                    .formatted(result.getTips().toMessage()))
+                .queue();
 
             // TODO The exact error details have a different POJO structure,
             // POJOs have to be added to get those details. See the Wolfram doc.
@@ -159,8 +160,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         return Optional.of(result);
     }
 
-    private Optional<WebhookMessageUpdateAction<Message>> createResult(QueryResult result,
-            SlashCommandEvent event) {
+    private @NotNull Optional<WebhookMessageUpdateAction<Message>> createResult(
+            @NotNull QueryResult result, @NotNull SlashCommandEvent event) {
         WebhookMessageUpdateAction<Message> action =
                 event.getHook().editOriginal("Computed in: " + result.getTiming());
         for (Pod pod : result.getPods()) {
@@ -178,9 +179,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                                 combineImages(imageURLs, image.getWidth(), resultHeight), name);
                         resultHeight = 0;
                     } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
-                        action = action.addFile(
-                                combineImages(List.of(image.getSource()), image.getWidth(),
-                                        image.getHeight()), name);
+                        action = action.addFile(combineImages(List.of(image.getSource()),
+                                image.getWidth(), image.getHeight()), name);
                     }
                     resultHeight += image.getHeight();
                     imageURLs.add(image.getSource());
@@ -189,8 +189,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     // see Wolfram doc)
                 } catch (IOException e) {
                     event.reply("Unable to generate message based on the WolframAlpha response")
-                            .setEphemeral(true)
-                            .queue();
+                        .setEphemeral(true)
+                        .queue();
                     logger.error("Failed to read image {} from the WolframAlpha response", image,
                             e);
                     return Optional.empty();
