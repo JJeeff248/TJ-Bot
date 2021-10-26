@@ -6,6 +6,7 @@ import io.mikael.urlbuilder.UrlBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class WolframAlphaCommand extends SlashCommandAdapter {
     private static final int HTTP_STATUS_CODE_OK = 200;
@@ -74,16 +76,19 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         event.deferReply().queue();
         String query = Objects.requireNonNull(event.getOption(QUERY_OPTION)).getAsString();
         HttpRequest request = sendQuery(query);
-        HttpResponse<String> response;
-        try {
-            response = getResponse(event, request);
-            QueryResult result = parseQuery(response, event);
-            createResult(result, event).queue();
-        } catch (AssertionError ignored) {
-        }
+        Optional<HttpResponse<String>> optResponse = getResponse(event, request);
+        if (optResponse.isEmpty())
+            return;
+        HttpResponse<String> response = optResponse.get();
+        Optional<QueryResult> optResult = parseQuery(response, event);
+        if (optResult.isEmpty())
+            return;
+        QueryResult result = optResult.get();
+        Optional<WebhookMessageUpdateAction<Message>> optAction = createResult(result, event);
+        optAction.ifPresent(RestAction::queue);
     }
 
-    private HttpResponse<String> getResponse(SlashCommandEvent event, HttpRequest request)
+    private Optional<HttpResponse<String>> getResponse(SlashCommandEvent event, HttpRequest request)
             throws AssertionError {
         HttpResponse<String> response;
         try {
@@ -94,7 +99,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .editOriginal("Unable to get a response from WolframAlpha API")
                     .queue();
             logger.warn("Could not get the response from the server", e);
-            throw new AssertionError();
+            return Optional.empty();
         } catch (InterruptedException e) {
             event.getHook()
                     .setEphemeral(true)
@@ -102,7 +107,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .queue();
             logger.info("Connection to WolframAlpha was interrupted", e);
             Thread.currentThread().interrupt();
-            throw new AssertionError();
+            return Optional.empty();
         }
 
         if (response.statusCode() != HTTP_STATUS_CODE_OK) {
@@ -112,9 +117,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .queue();
             logger.warn("Unexpected status code: Expected: {} Actual: {}", HTTP_STATUS_CODE_OK,
                     response.statusCode());
-            throw new AssertionError();
+            return Optional.empty();
         }
-        return response;
+        return Optional.of(response);
     }
 
     private HttpRequest sendQuery(String query) {
@@ -126,7 +131,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
     }
 
-    private QueryResult parseQuery(HttpResponse<String> response, SlashCommandEvent event)
+    private Optional<QueryResult> parseQuery(HttpResponse<String> response, SlashCommandEvent event)
             throws AssertionError {
         QueryResult result;
         try {
@@ -137,7 +142,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     .editOriginal("Unexpected response from WolframAlpha API")
                     .queue();
             logger.error("Unable to deserialize the class ", e);
-            throw new AssertionError();
+            return Optional.empty();
         }
 
         if (!result.isSuccess()) {
@@ -149,12 +154,12 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
             // TODO The exact error details have a different POJO structure,
             // POJOs have to be added to get those details. See the Wolfram doc.
-            throw new AssertionError();
+            return Optional.empty();
         }
-        return result;
+        return Optional.of(result);
     }
 
-    private WebhookMessageUpdateAction<Message> createResult(QueryResult result,
+    private Optional<WebhookMessageUpdateAction<Message>> createResult(QueryResult result,
             SlashCommandEvent event) {
         WebhookMessageUpdateAction<Message> action =
                 event.getHook().editOriginal("Computed in: " + result.getTiming());
@@ -188,10 +193,10 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             .queue();
                     logger.error("Failed to read image {} from the WolframAlpha response", image,
                             e);
-                    throw new AssertionError();
+                    return Optional.empty();
                 }
             }
         }
-        return action;
+        return Optional.of(action);
     }
 }
