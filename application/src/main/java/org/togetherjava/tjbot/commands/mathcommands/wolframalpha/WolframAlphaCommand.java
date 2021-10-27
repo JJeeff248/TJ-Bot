@@ -87,7 +87,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
     }
 
     private @NotNull Optional<HttpResponse<String>> getResponse(@NotNull SlashCommandEvent event,
-            @NotNull HttpRequest request) throws AssertionError {
+            @NotNull HttpRequest request) {
         HttpResponse<String> response;
         try {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -133,7 +133,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
     }
 
     private @NotNull Optional<QueryResult> parseQuery(@NotNull HttpResponse<String> response,
-            @NotNull SlashCommandEvent event) throws AssertionError {
+            @NotNull SlashCommandEvent event) {
         QueryResult result;
         try {
             result = XML.readValue(response.body(), QueryResult.class);
@@ -164,29 +164,38 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             @NotNull QueryResult result, @NotNull SlashCommandEvent event) {
         WebhookMessageUpdateAction<Message> action =
                 event.getHook().editOriginal("Computed in: " + result.getTiming());
-        for (Pod pod : result.getPods()) {
+        int filesAttached = 0;
+        OUTER: for (Pod pod : result.getPods()) {
             List<String> imageURLs = new ArrayList<>();
             int resultHeight = 0;
             for (SubPod subPod : pod.getSubPods()) {
                 WolfImage image = subPod.getImage();
                 try {
                     String name = image.getTitle();
+                    String source = image.getSource();
+                    String extension = ".jpg";
+
                     if (name.isEmpty()) {
                         name = pod.getTitle();
+                    }
+                    name += extension;
+                    if (filesAttached == 10) {
+                        break OUTER;
                     }
                     if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
                         action = action.addFile(
                                 combineImages(imageURLs, image.getWidth(), resultHeight), name);
+                        filesAttached++;
                         resultHeight = 0;
                     } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
-                        action = action.addFile(combineImages(List.of(image.getSource()),
-                                image.getWidth(), image.getHeight()), name);
+                        filesAttached++;
+                        action = action.addFile(
+                                combineImages(List.of(source), image.getWidth(), image.getHeight()),
+                                name);
                     }
                     resultHeight += image.getHeight();
-                    imageURLs.add(image.getSource());
+                    imageURLs.add(source);
 
-                    // TODO Figure out how to tell JDA that those are gifs (but sometimes also JPEG,
-                    // see Wolfram doc)
                 } catch (IOException e) {
                     event.reply("Unable to generate message based on the WolframAlpha response")
                         .setEphemeral(true)

@@ -162,3 +162,7 @@ logviewer/webpack.generated.js
 application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/Main.java
 
 application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/wolframexample.xml
+
+application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/wolfimage.gif
+
+application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/wolframalpha/Main.java
