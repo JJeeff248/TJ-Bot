@@ -13,18 +13,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.togetherjava.tjbot.commands.SlashCommandAdapter;
 import org.togetherjava.tjbot.commands.SlashCommandVisibility;
+import org.togetherjava.tjbot.commands.utils.WolfCommandUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -52,19 +53,22 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                 true);
     }
 
-    private static byte[] combineImages(List<String> urls, int width, int height)
-            throws IOException {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
-        Graphics imgGraphics = image.getGraphics();
-        int resultHeight = 0;
-        for (String str : urls) {
-            Image resultImage = ImageIO.read(new URL(str));
-            imgGraphics.drawImage(resultImage, width, resultHeight, null);
-            resultHeight += resultImage.getHeight(null);
+    private byte[] combineImages(List<String> urls, int width, int height) throws IOException {
+        BufferedImage image;
+        try {
+            image = WolfCommandUtils.combineImages(urls.stream().map(url -> {
+                try {
+                    return ImageIO.read(new URL(url));
+                } catch (IOException e) {
+                    return null;
+                }
+            }).toList(), width, height);
+        } catch (NullPointerException e) {
+            throw new IOException();
         }
-        ByteArrayOutputStream imageStream = new ByteArrayOutputStream();
-        ImageIO.write(image, "gif", imageStream);
-        return imageStream.toByteArray();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", baos);
+        return baos.toByteArray();
     }
 
     @Override
@@ -162,50 +166,41 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
     private @NotNull Optional<WebhookMessageUpdateAction<Message>> createResult(
             @NotNull QueryResult result, @NotNull SlashCommandEvent event) {
-        WebhookMessageUpdateAction<Message> action =
-                event.getHook().editOriginal("Computed in: " + result.getTiming());
-        int filesAttached = 0;
-        OUTER: for (Pod pod : result.getPods()) {
-            List<String> imageURLs = new ArrayList<>();
-            int resultHeight = 0;
-            for (SubPod subPod : pod.getSubPods()) {
-                WolfImage image = subPod.getImage();
-                try {
-                    String name = image.getTitle();
-                    String source = image.getSource();
-                    String extension = ".jpg";
+        var image = result.getPods().get(0).getSubPods().get(0).getImage();
 
-                    if (name.isEmpty()) {
-                        name = pod.getTitle();
-                    }
-                    name += extension;
-                    if (filesAttached == 10) {
-                        break OUTER;
-                    }
-                    if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
-                        action = action.addFile(
-                                combineImages(imageURLs, image.getWidth(), resultHeight), name);
-                        filesAttached++;
-                        resultHeight = 0;
-                    } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
-                        filesAttached++;
-                        action = action.addFile(
-                                combineImages(List.of(source), image.getWidth(), image.getHeight()),
-                                name);
-                    }
-                    resultHeight += image.getHeight();
-                    imageURLs.add(source);
-
-                } catch (IOException e) {
-                    event.reply("Unable to generate message based on the WolframAlpha response")
-                        .setEphemeral(true)
-                        .queue();
-                    logger.error("Failed to read image {} from the WolframAlpha response", image,
-                            e);
-                    return Optional.empty();
-                }
-            }
+        WebhookMessageUpdateAction<Message> action = null;
+        try {
+            BufferedImage img = ImageIO.read(new URL(image.getSource()));
+            ImageIO.write(ImageIO.read(new ByteArrayInputStream(combineImages(List
+                .of(image.getSource()), image.getWidth(), image.getHeight()))), "gif", new File(
+                        "C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolfimage.gif"));
+            action = event.getHook()
+                .editOriginal("Computed in: " + result.getTiming())
+                .addFile(combineImages(List.of(image.getSource()), image.getWidth(),
+                        image.getHeight()), image.getTitle() + ".gif");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        /*
+         * int filesAttached = 0; OUTER: for (Pod pod : result.getPods()) { List<String> imageURLs =
+         * new ArrayList<>(); int resultHeight = 0; for (SubPod subPod : pod.getSubPods()) {
+         * WolfImage image = subPod.getImage(); try { String name = image.getTitle(); String source
+         * = image.getSource(); String extension = ".png";
+         *
+         * if (name.isEmpty()) { name = pod.getTitle(); } name += extension; if (filesAttached ==
+         * 10) { break OUTER; } if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) { action
+         * = action.addFile( combineImages(imageURLs, image.getWidth(), resultHeight), name);
+         * filesAttached++; resultHeight = 0; } else if (subPod ==
+         * pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) { filesAttached++; action =
+         * action.addFile( combineImages(List.of(source), image.getWidth(), image.getHeight()),
+         * name); } resultHeight += image.getHeight(); imageURLs.add(source);
+         *
+         * } catch (IOException e) {
+         * event.reply("Unable to generate message based on the WolframAlpha response")
+         * .setEphemeral(true) .queue();
+         * logger.error("Failed to read image {} from the WolframAlpha response", image, e); return
+         * Optional.empty(); } } }
+         */
         return Optional.of(action);
     }
 }
