@@ -144,6 +144,7 @@ gradle-app.setting
 
 # End of https://www.toptal.com/developers/gitignore/api/netbeans,intellij,java,gradle,eclipse
 application/db/
+config.json
 application/config.json
 *.db
 *.db-shm
@@ -159,10 +160,3 @@ logviewer/pnpm-lock.yaml
 logviewer/webpack.config.js
 logviewer/webpack.generated.js
 
-application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/Main.java
-
-application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/wolframexample.xml
-
-application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/wolfimage.gif
-
-application/src/main/java/org/togetherjava/tjbot/commands/mathcommands/wolframalpha/Main.java
