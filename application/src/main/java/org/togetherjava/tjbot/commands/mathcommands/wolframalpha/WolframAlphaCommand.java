@@ -18,14 +18,13 @@ import org.togetherjava.tjbot.config.Config;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -166,41 +165,52 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
     private @NotNull Optional<WebhookMessageUpdateAction<Message>> createResult(
             @NotNull QueryResult result, @NotNull SlashCommandEvent event) {
-        var image = result.getPods().get(0).getSubPods().get(0).getImage();
 
-        WebhookMessageUpdateAction<Message> action = null;
-        try {
-            BufferedImage img = ImageIO.read(new URL(image.getSource()));
-            ImageIO.write(ImageIO.read(new ByteArrayInputStream(combineImages(List
-                .of(image.getSource()), image.getWidth(), image.getHeight()))), "gif", new File(
-                        "C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolfimage.gif"));
-            action = event.getHook()
-                .editOriginal("Computed in: " + result.getTiming())
-                .addFile(combineImages(List.of(image.getSource()), image.getWidth(),
-                        image.getHeight()), image.getTitle() + ".gif");
-        } catch (IOException e) {
-            e.printStackTrace();
+        WebhookMessageUpdateAction<Message> action =
+                event.getHook().editOriginal("Computed in " + result.getTiming());
+        int filesAttached = 0;
+        OUTER: for (Pod pod : result.getPods()) {
+            List<String> imageURLs = new ArrayList<>();
+            int resultHeight = 0;
+            for (SubPod subPod : pod.getSubPods()) {
+                WolfImage image = subPod.getImage();
+                try {
+                    String name = image.getTitle();
+                    String source = image.getSource();
+                    String extension = ".png";
+
+                    if (name.isEmpty()) {
+                        name = pod.getTitle();
+                    }
+                    name += extension;
+                    // FIXME get the attachments <= 10 or return a collection
+                    if (filesAttached == 10) {
+                        break OUTER;
+                    }
+                    if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
+                        action = action.addFile(
+                                combineImages(imageURLs, image.getWidth(), resultHeight), name);
+                        filesAttached++;
+                        resultHeight = 0;
+                    } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
+                        filesAttached++;
+                        action = action.addFile(
+                                combineImages(List.of(source), image.getWidth(), image.getHeight()),
+                                name);
+                    }
+                    resultHeight += image.getHeight();
+                    imageURLs.add(source);
+
+                } catch (IOException e) {
+                    event.reply("Unable to generate message based on the WolframAlpha response")
+                        .setEphemeral(true)
+                        .queue();
+                    logger.error("Failed to read image {} from the WolframAlpha response", image,
+                            e);
+                    return Optional.empty();
+                }
+            }
         }
-        /*
-         * int filesAttached = 0; OUTER: for (Pod pod : result.getPods()) { List<String> imageURLs =
-         * new ArrayList<>(); int resultHeight = 0; for (SubPod subPod : pod.getSubPods()) {
-         * WolfImage image = subPod.getImage(); try { String name = image.getTitle(); String source
-         * = image.getSource(); String extension = ".png";
-         *
-         * if (name.isEmpty()) { name = pod.getTitle(); } name += extension; if (filesAttached ==
-         * 10) { break OUTER; } if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) { action
-         * = action.addFile( combineImages(imageURLs, image.getWidth(), resultHeight), name);
-         * filesAttached++; resultHeight = 0; } else if (subPod ==
-         * pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) { filesAttached++; action =
-         * action.addFile( combineImages(List.of(source), image.getWidth(), image.getHeight()),
-         * name); } resultHeight += image.getHeight(); imageURLs.add(source);
-         *
-         * } catch (IOException e) {
-         * event.reply("Unable to generate message based on the WolframAlpha response")
-         * .setEphemeral(true) .queue();
-         * logger.error("Failed to read image {} from the WolframAlpha response", image, e); return
-         * Optional.empty(); } } }
-         */
         return Optional.of(action);
     }
 }

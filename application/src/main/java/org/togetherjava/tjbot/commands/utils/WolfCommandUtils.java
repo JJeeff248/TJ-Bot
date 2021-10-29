@@ -5,13 +5,18 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.stream.IntStream;
 
-public class WolfCommandUtils {
+public final class WolfCommandUtils {
+
+    private WolfCommandUtils() {
+
+    }
+
     public static BufferedImage combineImages(List<BufferedImage> images, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics imgGraphics = image.getGraphics();
         int resultHeight = 0;
         for (BufferedImage img : images) {
-            imgGraphics.drawImage(img, width, resultHeight, null);
+            imgGraphics.drawImage(img, 0, resultHeight, null);
             resultHeight += img.getHeight(null);
         }
         return image;
