@@ -4,9 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.mikael.urlbuilder.UrlBuilder;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -85,8 +86,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         if (optResult.isEmpty())
             return;
         QueryResult result = optResult.get();
-        Optional<WebhookMessageUpdateAction<Message>> optAction = createResult(result, event);
-        optAction.ifPresent(RestAction::queue);
+        event.getHook().editOriginal("Computed in:" + result.getTiming()).queue();
+        Optional<List<MessageAction>> optAction = createImages(event, result);
+        optAction.ifPresent(list -> list.forEach(MessageAction::queue));
     }
 
     private @NotNull Optional<HttpResponse<String>> getResponse(@NotNull SlashCommandEvent event,
@@ -161,6 +163,43 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             return Optional.empty();
         }
         return Optional.of(result);
+    }
+
+    private @NotNull Optional<List<MessageAction>> createImages(SlashCommandEvent event,
+            QueryResult result) {
+        MessageChannel channel = event.getChannel();
+        List<MessageAction> messages = new ArrayList<>();
+        // For each probably much more readable.
+        try {
+            result.getPods()
+                .forEach(pod -> pod.getSubPods().stream().map(SubPod::getImage).forEach(image -> {
+                    try {
+                        String name = image.getTitle();
+                        String source = image.getSource();
+                        String extension = ".png";
+                        if (name.isEmpty())
+                            name = pod.getTitle();
+                        name += extension;
+                        BufferedImage img = ImageIO.read(new URL(source));
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        ImageIO.write(img, ".png", stream);
+                        messages.add(channel.sendFile(stream.toByteArray(), name));
+                    } catch (IOException e) {
+                        event.getHook()
+                            .setEphemeral(true)
+                            .editOriginal(
+                                    "Unable to generate message based on the WolframAlpha response")
+
+                            .queue();
+                        logger.error("Failed to read image {} from the WolframAlpha response",
+                                image, e);
+                        throw new Error();
+                    }
+                }));
+        } catch (Error e) {
+            return Optional.empty();
+        }
+        return Optional.of(messages);
     }
 
     private @NotNull Optional<WebhookMessageUpdateAction<Message>> createResult(
