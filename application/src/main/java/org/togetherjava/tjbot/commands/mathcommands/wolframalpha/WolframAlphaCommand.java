@@ -182,7 +182,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                         name += extension;
                         BufferedImage img = ImageIO.read(new URL(source));
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        ImageIO.write(img, ".png", stream);
+                        ImageIO.write(img, "png", stream);
                         messages.add(channel.sendFile(stream.toByteArray(), name));
                     } catch (IOException e) {
                         event.getHook()
