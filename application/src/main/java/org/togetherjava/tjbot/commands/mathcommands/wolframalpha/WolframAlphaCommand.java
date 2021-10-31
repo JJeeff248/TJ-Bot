@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.jetbrains.annotations.NotNull;
@@ -19,16 +20,15 @@ import org.togetherjava.tjbot.config.Config;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 public final class WolframAlphaCommand extends SlashCommandAdapter {
     private static final int HTTP_STATUS_CODE_OK = 200;
@@ -86,9 +86,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         if (optResult.isEmpty())
             return;
         QueryResult result = optResult.get();
-        event.getHook().editOriginal("Computed in:" + result.getTiming()).queue();
-        Optional<List<MessageAction>> optAction = createImages(event, result);
-        optAction.ifPresent(list -> list.forEach(MessageAction::queue));
+        // event.getHook().editOriginal("Computed in:" + result.getTiming()).queue();
+        Optional<WebhookMessageUpdateAction<Message>> optAction = createResult(result, event);
+        optAction.ifPresent(RestAction::queue);
     }
 
     private @NotNull Optional<HttpResponse<String>> getResponse(@NotNull SlashCommandEvent event,
@@ -208,10 +208,22 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         WebhookMessageUpdateAction<Message> action =
                 event.getHook().editOriginal("Computed in " + result.getTiming());
         int filesAttached = 0;
-        OUTER: for (Pod pod : result.getPods()) {
-            List<String> imageURLs = new ArrayList<>();
-            int resultHeight = 0;
-            for (SubPod subPod : pod.getSubPods()) {
+        int resultHeight = 0;
+        int maxWidth = Integer.MIN_VALUE;
+        List<String> imageURLs = new ArrayList<>();
+        List<Pod> pods = new ArrayList<>(result.getPods());
+        //Collections.reverse(pods);
+        logger.info("There are {} pods", pods.size());
+        OUTER: for (int i = 0; i < pods.size();) {
+            Pod pod = pods.get(i);
+            List<SubPod> subPods = new ArrayList<>(pod.getSubPods());
+            //Collections.reverse(subPods);
+            logger.info("pod number {}", ++i);
+            logger.info("There are {} sub pods within this pod", subPods.size());
+            for (int j = 0; j < subPods.size();) {
+
+                SubPod subPod = subPods.get(j);
+                logger.info("sub pod number {}", ++j);
                 WolfImage image = subPod.getImage();
                 try {
                     String name = image.getTitle();
@@ -222,24 +234,48 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                         name = pod.getTitle();
                     }
                     name += extension;
+                    maxWidth = Math.max(maxWidth, image.getWidth());
                     // FIXME get the attachments <= 10 or return a collection
                     if (filesAttached == 10) {
                         break OUTER;
                     }
+
+
                     if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
-                        action = action.addFile(
-                                combineImages(imageURLs, image.getWidth(), resultHeight), name);
+                        byte[] arr = combineImages(imageURLs, maxWidth, resultHeight);
+                        imageURLs.clear();
+                        action = action.addFile(arr, name);
                         filesAttached++;
+                        logger.info("Image added");
+                        if (ImageIO
+                            .write(ImageIO.read(new ByteArrayInputStream(arr)), "png", new File(
+                                    "C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\img%d.png"
+                                        .formatted(filesAttached))))
+                            logger.info("Wrote image to local file");
+                        else
+                            logger.info("Could not write the image to local file");
                         resultHeight = 0;
-                    } else if (subPod == pod.getSubPods().get(pod.getNumberOfSubPods() - 1)) {
+                        maxWidth = Integer.MIN_VALUE;
+                    } else if (pod == pods.get(pods.size() - 1)
+                            && subPod == subPods.get(subPods.size() - 1)) {
+                        logger.info("This block is being executed somehow");
+                        byte[] arr = combineImages(imageURLs, maxWidth, resultHeight);
                         filesAttached++;
-                        action = action.addFile(
-                                combineImages(List.of(source), image.getWidth(), image.getHeight()),
-                                name);
+                        if (ImageIO
+                            .write(ImageIO.read(new ByteArrayInputStream(arr)), "png", new File(
+                                    "C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\img%d.png"
+                                        .formatted(filesAttached))))
+                            logger.info("Wrote image to local file");
+                        else
+                            logger.info("Could not write the image to local file");
+                        action = action.addFile(arr, name);
                     }
                     resultHeight += image.getHeight();
                     imageURLs.add(source);
-
+                    logger.info(
+                            "Max Width {} Result Height {} Current Width {} Current Height {} Images {}",
+                            maxWidth, resultHeight, image.getWidth(), image.getHeight(),
+                            filesAttached);
                 } catch (IOException e) {
                     event.reply("Unable to generate message based on the WolframAlpha response")
                         .setEphemeral(true)
@@ -249,6 +285,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     return Optional.empty();
                 }
             }
+            logger.info("Exiting pod number {}", i);
         }
         return Optional.of(action);
     }
