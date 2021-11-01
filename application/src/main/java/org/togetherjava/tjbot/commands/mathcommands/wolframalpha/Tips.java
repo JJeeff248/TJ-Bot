@@ -33,8 +33,10 @@ public class Tips {
     }
 
     public String toMessage() {
+        if (tips == null || count == 0)
+            return "";
         StringBuilder sb = new StringBuilder();
         tips.forEach(x -> sb.append(x).append("\n"));
-        return count == 0 ? "" : count + " tips:\n" + sb;
+        return count + " tips:\n" + sb;
     }
 }

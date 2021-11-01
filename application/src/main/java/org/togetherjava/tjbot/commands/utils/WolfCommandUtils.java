@@ -1,7 +1,10 @@
 package org.togetherjava.tjbot.commands.utils;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -11,12 +14,21 @@ public final class WolfCommandUtils {
 
     }
 
+    public static byte[] imageToBytes(BufferedImage img) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(img, "png", baos);
+        return baos.toByteArray();
+    }
+
     public static BufferedImage combineImages(List<BufferedImage> images, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics imgGraphics = image.getGraphics();
+        imgGraphics.setColor(Color.WHITE);
         int resultHeight = 0;
         for (BufferedImage img : images) {
             imgGraphics.drawImage(img, 0, resultHeight, null);
+            imgGraphics.fillRect(img.getWidth(), resultHeight, width - img.getWidth(),
+                    img.getHeight());
             resultHeight += img.getHeight(null);
         }
         return image;
