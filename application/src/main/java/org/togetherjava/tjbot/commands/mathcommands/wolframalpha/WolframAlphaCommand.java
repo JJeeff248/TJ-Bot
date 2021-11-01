@@ -19,11 +19,12 @@ import org.togetherjava.tjbot.commands.utils.WolfCommandUtils;
 import org.togetherjava.tjbot.config.Config;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.http.HttpClient;
@@ -31,6 +32,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -43,13 +45,21 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
      * WolframAlpha API endpoint to connect to.
      *
      * @see <a href=
-     *      "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
-     *      Reference</a>.
+     * "https://products.wolframalpha.com/docs/WolframAlpha-API-Reference.pdf">WolframAlpha API
+     * Reference</a>.
      */
     private static final String API_ENDPOINT = "http://api.wolframalpha.com/v2/query";
     private static final int MAX_IMAGE_HEIGHT_PX = 300;
-    private final HttpClient client = HttpClient.newHttpClient();
+    /**
+     * WolframAlpha text Color
+     */
     private static final Color WOLFRAM_ALPHA_TEXT_COLOR = Color.decode("#3C3C3C");
+    /**
+     * WolframAlpha Font
+     */
+    private static final Font WOLFRAM_ALPHA_FONT = new Font("Times", Font.PLAIN, 15).deriveFont(
+            Map.of(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON));
+    private final HttpClient client = HttpClient.newHttpClient();
 
     public WolframAlphaCommand() {
         super("wolf", "Renders mathematical queries using WolframAlpha",
@@ -58,8 +68,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                 true);
     }
 
-    @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    @Override public void onSlashCommand(@NotNull SlashCommandEvent event) {
 
         // The processing takes some time
         event.deferReply().queue();
@@ -84,16 +93,16 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException e) {
             event.getHook()
-                .setEphemeral(true)
-                .editOriginal("Unable to get a response from WolframAlpha API")
-                .queue();
+                    .setEphemeral(true)
+                    .editOriginal("Unable to get a response from WolframAlpha API")
+                    .queue();
             logger.warn("Could not get the response from the server", e);
             return Optional.empty();
         } catch (InterruptedException e) {
             event.getHook()
-                .setEphemeral(true)
-                .editOriginal("Connection to WolframAlpha was interrupted")
-                .queue();
+                    .setEphemeral(true)
+                    .editOriginal("Connection to WolframAlpha was interrupted")
+                    .queue();
             logger.info("Connection to WolframAlpha was interrupted", e);
             Thread.currentThread().interrupt();
             return Optional.empty();
@@ -101,9 +110,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
 
         if (response.statusCode() != HTTP_STATUS_CODE_OK) {
             event.getHook()
-                .setEphemeral(true)
-                .editOriginal("The response' status code was incorrect")
-                .queue();
+                    .setEphemeral(true)
+                    .editOriginal("The response' status code was incorrect")
+                    .queue();
             logger.warn("Unexpected status code: Expected: {} Actual: {}", HTTP_STATUS_CODE_OK,
                     response.statusCode());
             return Optional.empty();
@@ -112,14 +121,11 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
     }
 
     private @NotNull HttpRequest sendQuery(@NotNull String query) {
-        return HttpRequest
-            .newBuilder(UrlBuilder.fromString(API_ENDPOINT)
+        return HttpRequest.newBuilder(UrlBuilder.fromString(API_ENDPOINT)
                 .addParameter("appid", Config.getInstance().getWolframAlphaAppId())
                 .addParameter("format", "image,plaintext")
                 .addParameter("input", query)
-                .toUri())
-            .GET()
-            .build();
+                .toUri()).GET().build();
 
     }
 
@@ -130,19 +136,19 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             result = XML.readValue(response.body(), QueryResult.class);
         } catch (JsonProcessingException e) {
             event.getHook()
-                .setEphemeral(true)
-                .editOriginal("Unexpected response from WolframAlpha API")
-                .queue();
+                    .setEphemeral(true)
+                    .editOriginal("Unexpected response from WolframAlpha API")
+                    .queue();
             logger.error("Unable to deserialize the class ", e);
             return Optional.empty();
         }
 
         if (!result.isSuccess()) {
             event.getHook()
-                .setEphemeral(true)
-                .editOriginal("Could not successfully receive the result %s"
-                    .formatted(result.getTips().toMessage()))
-                .queue();
+                    .setEphemeral(true)
+                    .editOriginal("Could not successfully receive the result %s".formatted(
+                            result.getTips().toMessage()))
+                    .queue();
 
             // TODO The exact error details have a different POJO structure,
             // POJOs have to be added to get those details. See the Wolfram doc.
@@ -158,30 +164,34 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         // For each probably much more readable.
         try {
             result.getPods()
-                .forEach(pod -> pod.getSubPods().stream().map(SubPod::getImage).forEach(image -> {
-                    try {
-                        String name = image.getTitle();
-                        String source = image.getSource();
-                        String extension = ".png";
-                        if (name.isEmpty())
-                            name = pod.getTitle();
-                        name += extension;
-                        BufferedImage img = ImageIO.read(new URL(source));
-                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        ImageIO.write(img, "png", stream);
-                        messages.add(channel.sendFile(stream.toByteArray(), name));
-                    } catch (IOException e) {
-                        event.getHook()
-                            .setEphemeral(true)
-                            .editOriginal(
-                                    "Unable to generate message based on the WolframAlpha response")
+                    .forEach(pod -> pod.getSubPods()
+                            .stream()
+                            .map(SubPod::getImage)
+                            .forEach(image -> {
+                                try {
+                                    String name = image.getTitle();
+                                    String source = image.getSource();
+                                    String extension = ".png";
+                                    if (name.isEmpty())
+                                        name = pod.getTitle();
+                                    name += extension;
+                                    BufferedImage img = ImageIO.read(new URL(source));
+                                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                    ImageIO.write(img, "png", stream);
+                                    messages.add(channel.sendFile(stream.toByteArray(), name));
+                                } catch (IOException e) {
+                                    event.getHook()
+                                            .setEphemeral(true)
+                                            .editOriginal(
+                                                    "Unable to generate message based on the WolframAlpha response")
 
-                            .queue();
-                        logger.error("Failed to read image {} from the WolframAlpha response",
-                                image, e);
-                        throw new Error();
-                    }
-                }));
+                                            .queue();
+                                    logger.error(
+                                            "Failed to read image {} from the WolframAlpha response",
+                                            image, e);
+                                    throw new Error();
+                                }
+                            }));
         } catch (Error e) {
             return Optional.empty();
         }
@@ -197,16 +207,17 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         int resultHeight = 0;
         int maxWidth = Integer.MIN_VALUE;
         List<BufferedImage> images = new ArrayList<>();
+        List<byte[]> bytes = new ArrayList<>();
+        List<String> names = new ArrayList<>();
         List<Pod> pods = new ArrayList<>(result.getPods());
-        // Collections.reverse(pods);
         logger.info("There are {} pods", pods.size());
-        OUTER: for (int i = 0; i < pods.size();) {
+        OUTER:
+        for (int i = 0; i < pods.size(); ) {
             Pod pod = pods.get(i);
             List<SubPod> subPods = new ArrayList<>(pod.getSubPods());
-            // Collections.reverse(subPods);
             logger.info("pod number {}", ++i);
             logger.info("There are {} sub pods within this pod", subPods.size());
-            for (int j = 0; j < subPods.size();) {
+            for (int j = 0; j < subPods.size(); ) {
 
                 SubPod subPod = subPods.get(j);
                 logger.info("sub pod number {}", ++j);
@@ -216,11 +227,12 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     String source = image.getSource();
                     String extension = ".png";
                     String header = pod.getTitle();
-                    BufferedImage readImage = new BufferedImage(image.getWidth(),
-                            image.getHeight() + 20, BufferedImage.TYPE_4BYTE_ABGR);
+                    BufferedImage readImage =
+                            new BufferedImage(image.getWidth(), image.getHeight() + 20,
+                                    BufferedImage.TYPE_4BYTE_ABGR);
                     Graphics graphics = readImage.getGraphics();
+                    graphics.setFont(WOLFRAM_ALPHA_FONT);
                     graphics.setColor(Color.WHITE);
-                    graphics.fillRect(0, 0, header.length() * 10, 20);
                     graphics.setColor(WOLFRAM_ALPHA_TEXT_COLOR);
                     graphics.drawString(header, 10, 10);
                     graphics.drawImage(ImageIO.read(new URL(source)), 0, 20, null);
@@ -240,32 +252,19 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                         byte[] arr = WolfCommandUtils.imageToBytes(
                                 WolfCommandUtils.combineImages(images, maxWidth, resultHeight));
                         images.clear();
-                        action = action.addFile(arr, name);
+                        bytes.add(arr);
+                        names.add(name);
                         filesAttached++;
-                        logger.info("Image added");
-                        if (ImageIO
-                            .write(ImageIO.read(new ByteArrayInputStream(arr)), "png", new File(
-                                    "C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\img%d.png"
-                                        .formatted(filesAttached))))
-                            logger.info("Wrote image to local file");
-                        else
-                            logger.info("Could not write the image to local file");
                         resultHeight = 0;
                         maxWidth = Integer.MIN_VALUE;
-                    } else if (pod == pods.get(pods.size() - 1)
-                            && subPod == subPods.get(subPods.size() - 1)) {
+                    } else if (pod == pods.get(pods.size() - 1) && subPod == subPods.get(
+                            subPods.size() - 1)) {
                         logger.info("The last image");
                         byte[] arr = WolfCommandUtils.imageToBytes(
                                 WolfCommandUtils.combineImages(images, maxWidth, resultHeight));
                         filesAttached++;
-                        if (ImageIO
-                            .write(ImageIO.read(new ByteArrayInputStream(arr)), "png", new File(
-                                    "C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\img%d.png"
-                                        .formatted(filesAttached))))
-                            logger.info("Wrote image to local file");
-                        else
-                            logger.info("Could not write the image to local file");
-                        action = action.addFile(arr, name);
+                        bytes.add(arr);
+                        names.add(name);
                     }
                     resultHeight += image.getHeight();
                     images.add(readImage);
@@ -275,14 +274,17 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             filesAttached);
                 } catch (IOException e) {
                     event.reply("Unable to generate message based on the WolframAlpha response")
-                        .setEphemeral(true)
-                        .queue();
+                            .setEphemeral(true)
+                            .queue();
                     logger.error("Failed to read image {} from the WolframAlpha response", image,
                             e);
                     return Optional.empty();
                 }
             }
             logger.info("Exiting pod number {}", i);
+        }
+        for (int i = bytes.size() - 1; i >= 0; i--) {
+            action = action.addFile(bytes.get(i), names.get(i));
         }
         return Optional.of(action);
     }

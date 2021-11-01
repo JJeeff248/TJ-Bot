@@ -24,11 +24,10 @@ public final class WolfCommandUtils {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics imgGraphics = image.getGraphics();
         imgGraphics.setColor(Color.WHITE);
+        imgGraphics.fillRect(0, 0, width, height);
         int resultHeight = 0;
         for (BufferedImage img : images) {
             imgGraphics.drawImage(img, 0, resultHeight, null);
-            imgGraphics.fillRect(img.getWidth(), resultHeight, width - img.getWidth(),
-                    img.getHeight());
             resultHeight += img.getHeight(null);
         }
         return image;
