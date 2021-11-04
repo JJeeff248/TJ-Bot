@@ -9,6 +9,7 @@ import org.togetherjava.tjbot.commands.tags.TagCommand;
 import org.togetherjava.tjbot.commands.tags.TagManageCommand;
 import org.togetherjava.tjbot.commands.tags.TagSystem;
 import org.togetherjava.tjbot.commands.tags.TagsCommand;
+import org.togetherjava.tjbot.commands.moderation.*;
 import org.togetherjava.tjbot.db.Database;
 
 import java.util.Collection;
@@ -42,6 +43,6 @@ public enum Commands {
         // available.
         return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
                 new TagCommand(tagSystem), new TagManageCommand(tagSystem),
-                new TagsCommand(tagSystem), new VcActivityCommand());
+                new TagsCommand(tagSystem), new VcActivityCommand(), new KickCommand(), new BanCommand(), new UnbanCommand());
     }
 }
