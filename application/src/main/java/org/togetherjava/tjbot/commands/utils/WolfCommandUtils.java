@@ -1,10 +1,13 @@
 package org.togetherjava.tjbot.commands.utils;
 
+import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -21,13 +24,25 @@ public final class WolfCommandUtils {
     }
 
     public static BufferedImage combineImages(List<BufferedImage> images, int width, int height) {
+        width = images.stream().mapToInt(BufferedImage::getWidth).max().orElse(Integer.MAX_VALUE);
+        height = images.stream().mapToInt(BufferedImage::getHeight).sum();
+        WolframAlphaCommand.logger.info("In Method: Width {} Height {}", width, height);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
         Graphics imgGraphics = image.getGraphics();
         imgGraphics.setColor(Color.WHITE);
         imgGraphics.fillRect(0, 0, width, height);
         int resultHeight = 0;
+        int writtenImage = 0;
         for (BufferedImage img : images) {
             imgGraphics.drawImage(img, 0, resultHeight, null);
+            try {
+                ImageIO.write(image, "png", Path
+                    .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\utils\\combinedImage%d.png"
+                        .formatted(++writtenImage))
+                    .toFile());
+            } catch (IOException e) {
+                WolframAlphaCommand.logger.error("e");
+            }
             resultHeight += img.getHeight(null);
         }
         return image;
