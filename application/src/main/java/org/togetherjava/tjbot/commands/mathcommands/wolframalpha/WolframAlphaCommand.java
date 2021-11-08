@@ -287,9 +287,10 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             .toFile());
                         if (message == null) {
                             message = channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage),
-                                    "result.png");
+                                    "result%d.png".formatted(++filesAttached));
                         } else {
-                            message.addFile(WolfCommandUtils.imageToBytes(combinedImage), name);
+                            message.addFile(WolfCommandUtils.imageToBytes(combinedImage),
+                                    "result%d.png".formatted(++filesAttached));
                         }
                         /*
                          * messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage
@@ -303,7 +304,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                         // names.add(name);
                         resultHeight = 0;
                         maxWidth = Integer.MIN_VALUE;
-                        embeds.add(embedBuilder.setTitle("attachment://result.png").build());
+                        embeds.add(embedBuilder
+                            .setImage("attachment://result%d.png".formatted(filesAttached))
+                            .build());
                     } else if (pod == pods.get(pods.size() - 1)
                             && subPod == subPods.get(subPods.size() - 1)) {
                         logger.info("The last image");
@@ -317,9 +320,10 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             .toFile());
                         if (message == null) {
                             message = channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage),
-                                    name);
+                                    "result%d.png".formatted(++filesAttached));
                         } else {
-                            message.addFile(WolfCommandUtils.imageToBytes(combinedImage), name);
+                            message.addFile(WolfCommandUtils.imageToBytes(combinedImage),
+                                    "result%d.png".formatted(++filesAttached));
                         }
                         /*
                          * messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage
@@ -329,7 +333,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                          * bytes.add(WolfCommandUtils.imageToBytes(combinedImage));//
                          * filesAttached++;
                          */
-                        embeds.add(embedBuilder.setTitle("attachment://result.png").build());
+                        embeds.add(embedBuilder
+                            .setImage("attachment://result%d.png".formatted(filesAttached))
+                            .build());
                     }
                     resultHeight += readImage.getHeight();
                     images.add(readImage);
