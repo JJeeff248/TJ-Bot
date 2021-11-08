@@ -3,11 +3,14 @@ package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.mikael.urlbuilder.UrlBuilder;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,8 +88,11 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         if (optResult.isEmpty())
             return;
         QueryResult result = optResult.get();
-        Optional<List<MessageAction>> optAction = createResult(result, event);
-        optAction.ifPresent(list -> list.forEach(MessageAction::queue));
+        /*
+         * Optional<List<MessageAction>> optAction = createResult(result, event);
+         * optAction.ifPresent(list -> list.forEach(MessageAction::queue));
+         */
+        createResult$1(result, event).ifPresent(RestAction::queue);
     }
 
     private @NotNull Optional<HttpResponse<String>> getResponse(@NotNull SlashCommandEvent event,
@@ -363,6 +369,155 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
          */
         messages.add(message.setEmbeds(embeds));
         return Optional.of(messages);
+    }
+
+    private @NotNull Optional<WebhookMessageUpdateAction<Message>> createResult$1(
+            @NotNull QueryResult result, @NotNull SlashCommandEvent event) {
+
+        WebhookMessageUpdateAction<Message> action =
+                event.getHook().editOriginal("Computed in " + result.getTiming());
+        int filesAttached = 0;
+        int resultHeight = 0;
+        int maxWidth = Integer.MIN_VALUE;
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        List<MessageEmbed> embeds = new ArrayList<>();
+        List<BufferedImage> images = new ArrayList<>();
+        List<byte[]> bytes = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        List<Pod> pods = new ArrayList<>(result.getPods());
+        logger.info("There are {} pods", pods.size());
+        int imageNo = 0;
+        OUTER: for (int i = 0; i < pods.size();) {
+            Pod pod = pods.get(i);
+            List<SubPod> subPods = new ArrayList<>(pod.getSubPods());
+            logger.info("pod number {}", ++i);
+            logger.info("There are {} sub pods within this pod", subPods.size());
+            for (int j = 0; j < subPods.size();) {
+
+                SubPod subPod = subPods.get(j);
+                logger.info("sub pod number {}", ++j);
+                WolfImage image = subPod.getImage();
+                try {
+                    String name = image.getTitle();
+                    String source = image.getSource();
+                    String extension = ".png";
+                    String header = pod.getTitle();
+                    boolean jIs1 = j == 1;
+                    int width =
+                            (jIs1 ? Math.max(getWidth(header), image.getWidth()) : image.getWidth())
+                                    + 10;
+                    int height = image.getHeight();
+                    if (j == 1)
+                        height += TEXT_HEIGHT;
+                    BufferedImage readImage =
+                            new BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR);
+                    Graphics graphics = readImage.getGraphics();
+                    if (jIs1) {
+                        graphics.setFont(WOLFRAM_ALPHA_FONT);
+                        graphics.setColor(Color.WHITE);
+                        graphics.setColor(WOLFRAM_ALPHA_TEXT_COLOR);
+                        graphics.drawString(header, 10, 15);
+                    }
+                    var srcImg = ImageIO.read(new URL(source));
+                    graphics.drawImage(srcImg, 10, jIs1 ? 20 : 0, null);
+
+                    ImageIO.write(readImage, "png", Path
+                        .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\img%d.png"
+                            .formatted(++imageNo))
+                        .toFile());
+                    ImageIO.write(srcImg, "png", Path
+                        .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\ogImg%d.png"
+                            .formatted(imageNo))
+                        .toFile());
+
+                    if (name.isEmpty()) {
+                        name = header;
+                    }
+                    name += extension;
+                    maxWidth = Math.max(maxWidth, width);
+                    // FIXME get the attachments <= 10 or return a collection
+                    if (filesAttached == 10) {
+                        break OUTER;
+                    }
+
+
+                    if (resultHeight + image.getHeight() > MAX_IMAGE_HEIGHT_PX) {
+                        BufferedImage combinedImage =
+                                WolfCommandUtils.combineImages(images, maxWidth, resultHeight);
+                        images.clear();
+                        ImageIO.write(combinedImage, "png", Path
+                            .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\sentImage%d.png"
+                                .formatted(++filesAttached))
+                            .toFile());
+                        action = action.addFile(WolfCommandUtils.imageToBytes(combinedImage),
+                                "result%d.png".formatted(++filesAttached));
+                        /*
+                         * messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage
+                         * ), name));
+                         */
+                        /*
+                         * bytes.add(WolfCommandUtils.imageToBytes(combinedImage));
+                         *
+                         */
+                        // filesAttached++;
+                        // names.add(name);
+                        resultHeight = 0;
+                        maxWidth = Integer.MIN_VALUE;
+                        embeds.add(embedBuilder
+                            .setImage("attachment://result%d.png".formatted(filesAttached))
+                            .build());
+                    } else if (pod == pods.get(pods.size() - 1)
+                            && subPod == subPods.get(subPods.size() - 1)) {
+                        logger.info("The last image");
+                        BufferedImage combinedImage = WolfCommandUtils.combineImages(images,
+                                Math.max(maxWidth, image.getWidth()),
+                                resultHeight + image.getHeight());
+                        images.clear();
+                        ImageIO.write(combinedImage, "png", Path
+                            .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\sentImage%d.png"
+                                .formatted(++filesAttached))
+                            .toFile());
+
+                        action = action.addFile(WolfCommandUtils.imageToBytes(combinedImage),
+                                "result%d.png".formatted(++filesAttached));
+
+                        /*
+                         * messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage
+                         * ), name));
+                         */
+                        /*
+                         * bytes.add(WolfCommandUtils.imageToBytes(combinedImage));//
+                         * filesAttached++;
+                         */
+                        embeds.add(embedBuilder
+                            .setImage("attachment://result%d.png".formatted(filesAttached))
+                            .build());
+                    }
+                    resultHeight += readImage.getHeight();
+                    images.add(readImage);
+                    logger.info(
+                            "Max Width {} Result Height {} Current Width {} Current Height {} Images {}",
+                            maxWidth, resultHeight, readImage.getWidth(), readImage.getHeight(),
+                            filesAttached);
+                } catch (IOException e) {
+                    event.reply("Unable to generate message based on the WolframAlpha response")
+                        .setEphemeral(true)
+                        .queue();
+                    logger.error("Failed to read image {} from the WolframAlpha response", image,
+                            e);
+                    return Optional.empty();
+                }
+            }
+            logger.info("Exiting pod number {}", i);
+        }
+        /*
+         * for (int i = bytes.size() - 1; i >= 0; i--) { try { ImageIO.write(ImageIO.read(new
+         * ByteArrayInputStream(bytes.get(i))), "png", Path .of(
+         * "C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\sentImage%d.png"
+         * .formatted(i)) .toFile()); } catch (IOException e) { e.printStackTrace(); } action =
+         * action.addFile(bytes.get(i), names.get(i)); }
+         */
+        return Optional.of(action.setEmbeds(embeds));
     }
 
     private int getWidth(String header) {
