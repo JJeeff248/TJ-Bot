@@ -2,13 +2,12 @@ package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.mikael.urlbuilder.UrlBuilder;
-import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -32,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public final class WolframAlphaCommand extends SlashCommandAdapter {
@@ -140,10 +139,11 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
             @NotNull SlashCommandEvent event) {
         QueryResult result;
         try {
-            result = XML.readValue(response.body(), QueryResult.class);
             Files.writeString(Path
                 .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\responsebody.xml"),
                     response.body());
+            result = XML.readValue(response.body(), QueryResult.class);
+
         } catch (IOException e) {
             event.getHook()
                 .setEphemeral(true)
@@ -213,6 +213,9 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         int filesAttached = 0;
         int resultHeight = 0;
         int maxWidth = Integer.MIN_VALUE;
+        MessageAction message = null;
+        EmbedBuilder embedBuilder = new EmbedBuilder();
+        List<MessageEmbed> embeds = new ArrayList<>();
         List<BufferedImage> images = new ArrayList<>();
         List<byte[]> bytes = new ArrayList<>();
         List<String> names = new ArrayList<>();
@@ -282,14 +285,25 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\sentImage%d.png"
                                 .formatted(++filesAttached))
                             .toFile());
-                        messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage),
-                                name));
+                        if (message == null) {
+                            message = channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage),
+                                    "result.png");
+                        } else {
+                            message.addFile(WolfCommandUtils.imageToBytes(combinedImage), name);
+                        }
                         /*
-                         * bytes.add(WolfCommandUtils.imageToBytes(combinedImage)); names.add(name);
+                         * messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage
+                         * ), name));
+                         */
+                        /*
+                         * bytes.add(WolfCommandUtils.imageToBytes(combinedImage));
+                         * 
                          */
                         // filesAttached++;
+                        // names.add(name);
                         resultHeight = 0;
                         maxWidth = Integer.MIN_VALUE;
+                        embeds.add(embedBuilder.setTitle("attachment://result.png").build());
                     } else if (pod == pods.get(pods.size() - 1)
                             && subPod == subPods.get(subPods.size() - 1)) {
                         logger.info("The last image");
@@ -301,12 +315,21 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             .of("C:\\Users\\Abc\\IdeaProjects\\TJ-Bot-baseRepo\\application\\src\\main\\java\\org\\togetherjava\\tjbot\\commands\\mathcommands\\wolframalpha\\sentImage%d.png"
                                 .formatted(++filesAttached))
                             .toFile());
-                        messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage),
-                                name));
+                        if (message == null) {
+                            message = channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage),
+                                    name);
+                        } else {
+                            message.addFile(WolfCommandUtils.imageToBytes(combinedImage), name);
+                        }
+                        /*
+                         * messages.add(channel.sendFile(WolfCommandUtils.imageToBytes(combinedImage
+                         * ), name));
+                         */
                         /*
                          * bytes.add(WolfCommandUtils.imageToBytes(combinedImage));//
-                         * filesAttached++; names.add(name);
+                         * filesAttached++;
                          */
+                        embeds.add(embedBuilder.setTitle("attachment://result.png").build());
                     }
                     resultHeight += readImage.getHeight();
                     images.add(readImage);
@@ -332,6 +355,7 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
          * .formatted(i)) .toFile()); } catch (IOException e) { e.printStackTrace(); } action =
          * action.addFile(bytes.get(i), names.get(i)); }
          */
+        messages.add(message.setEmbeds(embeds));
         return Optional.of(messages);
     }
 
