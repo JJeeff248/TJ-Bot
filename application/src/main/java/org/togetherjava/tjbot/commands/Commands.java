@@ -44,6 +44,6 @@ public enum Commands {
         return List.of(new PingCommand(), new DatabaseCommand(database), new TeXCommand(),
                 new TagCommand(tagSystem), new TagManageCommand(tagSystem),
                 new TagsCommand(tagSystem), new VcActivityCommand(), new KickCommand(),
-                new BanCommand(), new UnbanCommand());
+                new BanCommand(), new UnbanCommand(), new MuteCommand(), new UnmuteCommand());
     }
 }
