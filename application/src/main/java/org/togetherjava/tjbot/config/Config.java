@@ -23,16 +23,23 @@ public final class Config {
     private final String databasePath;
     private final String projectWebsite;
     private final String discordGuildInvite;
+    private final String heavyModerationRolePattern;
+    private final String softModerationRolePattern;
 
+    @SuppressWarnings("ConstructorWithTooManyParameters")
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
             @JsonProperty("databasePath") String databasePath,
             @JsonProperty("projectWebsite") String projectWebsite,
-            @JsonProperty("discordGuildInvite") String discordGuildInvite) {
+            @JsonProperty("discordGuildInvite") String discordGuildInvite,
+            @JsonProperty("heavyModerationRolePattern") String heavyModerationRolePattern,
+            @JsonProperty("softModerationRolePattern") String softModerationRolePattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
+        this.heavyModerationRolePattern = heavyModerationRolePattern;
+        this.softModerationRolePattern = softModerationRolePattern;
     }
 
     /**
@@ -93,5 +100,25 @@ public final class Config {
      */
     public String getDiscordGuildInvite() {
         return discordGuildInvite;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use heavy moderation
+     * commands, such as banning, based on role names.
+     * 
+     * @return the REGEX pattern
+     */
+    public String getHeavyModerationRolePattern() {
+        return heavyModerationRolePattern;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use soft moderation
+     * commands, such as kicking, muting or message deletion, based on role names.
+     * 
+     * @return the REGEX pattern
+     */
+    public String getSoftModerationRolePattern() {
+        return softModerationRolePattern;
     }
 }
