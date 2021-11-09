@@ -25,6 +25,7 @@ public final class Config {
     private final String discordGuildInvite;
     private final String modAuditLogChannelPattern;
     private final String mutedRolePattern;
+    private final String tagManageRolePattern;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     private Config(@JsonProperty("token") String token,
@@ -32,13 +33,15 @@ public final class Config {
             @JsonProperty("projectWebsite") String projectWebsite,
             @JsonProperty("discordGuildInvite") String discordGuildInvite,
             @JsonProperty("modAuditLogChannelPattern") String modAuditLogChannelPattern,
-            @JsonProperty("mutedRolePattern") String mutedRolePattern) {
+            @JsonProperty("mutedRolePattern") String mutedRolePattern,
+            @JsonProperty("tagManageRolePattern") String tagManageRolePattern) {
         this.token = token;
         this.databasePath = databasePath;
         this.projectWebsite = projectWebsite;
         this.discordGuildInvite = discordGuildInvite;
         this.modAuditLogChannelPattern = modAuditLogChannelPattern;
         this.mutedRolePattern = mutedRolePattern;
+        this.tagManageRolePattern = tagManageRolePattern;
     }
 
     /**
@@ -118,5 +121,15 @@ public final class Config {
      */
     public String getDiscordGuildInvite() {
         return discordGuildInvite;
+    }
+
+    /**
+     * Gets the REGEX pattern used to identify roles that are allowed to use the tag-manage command,
+     * such as creating or editing tags.
+     *
+     * @return the REGEX pattern
+     */
+    public String getTagManageRolePattern() {
+        return tagManageRolePattern;
     }
 }
