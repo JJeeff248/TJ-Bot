@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +36,11 @@ final class QueryResult {
     @JacksonXmlProperty(isAttribute = true, localName = "recalculate")
     private String recalculateUrl;
     private Tips tips;
+    private DidYouMeans didYouMeans;
+    private LanguageMsg languageMsg;
+    private ExamplePage examplePage;
+    private FutureTopic futureTopic;
+    private RelatedExamples relatedExamples;
     @JsonProperty("pod")
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<Pod> pods;
