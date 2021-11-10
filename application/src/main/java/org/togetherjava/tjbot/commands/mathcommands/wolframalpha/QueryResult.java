@@ -28,7 +28,7 @@ final class QueryResult {
     @JacksonXmlProperty(isAttribute = true)
     private double timing;
     @JacksonXmlProperty(isAttribute = true, localName = "timedout")
-    private int numberOfTimedOutPods;
+    private String timedOutPods;
     @JacksonXmlProperty(isAttribute = true, localName = "parsetiming")
     private double parseTiming;
     @JacksonXmlProperty(isAttribute = true, localName = "parsetimedout")
@@ -69,8 +69,12 @@ final class QueryResult {
         return timing;
     }
 
+    public String getTimedOutPods() {
+        return timedOutPods;
+    }
+
     public int getNumberOfTimedOutPods() {
-        return numberOfTimedOutPods;
+        return timedOutPods.isEmpty() ? 0 : timedOutPods.split(",").length;
     }
 
     public double getParseTiming() {
@@ -117,8 +121,8 @@ final class QueryResult {
         this.timing = timing;
     }
 
-    public void setNumberOfTimedOutPods(int numberOfTimedOutPods) {
-        this.numberOfTimedOutPods = numberOfTimedOutPods;
+    public void setTimedOutPods(String timedOutPods) {
+        this.timedOutPods = timedOutPods;
     }
 
     public void setParseTiming(double parseTiming) {

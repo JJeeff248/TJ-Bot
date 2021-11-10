@@ -114,7 +114,11 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
          * Optional<List<MessageAction>> optAction = createResult(result, event);
          * optAction.ifPresent(list -> list.forEach(MessageAction::queue));
          */
-        createResult$1(result, event, action, uriEmbed).ifPresent(RestAction::queue);
+        String content = "Computed in:" + result.getTiming() + "\n"
+                + (result.getNumberOfTimedOutPods() == 0 ? ""
+                        : "Some pods have timed out. Visit the URI")
+                + "\n" + createResult$1(result, event, action, uriEmbed);
+        action.setContent(content).queue();
     }
 
     private @NotNull Optional<HttpResponse<String>> getResponse(@NotNull SlashCommandEvent event,
@@ -390,13 +394,14 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
         return Optional.of(messages);
     }
 
-    private @NotNull Optional<WebhookMessageUpdateAction<Message>> createResult$1(
-            @NotNull QueryResult result, @NotNull SlashCommandEvent event,
-            WebhookMessageUpdateAction<Message> action, MessageEmbed embed) {
+    private @NotNull String createResult$1(@NotNull QueryResult result,
+            @NotNull SlashCommandEvent event, WebhookMessageUpdateAction<Message> action,
+            MessageEmbed embed) {
 
         int filesAttached = 0;
         int resultHeight = 0;
         int maxWidth = Integer.MIN_VALUE;
+        boolean podsTimedOut = result.getNumberOfTimedOutPods() != 0;
         EmbedBuilder embedBuilder = new EmbedBuilder();
         List<MessageEmbed> embeds = new ArrayList<>(List.of(embed));
         List<BufferedImage> images = new ArrayList<>();
@@ -455,7 +460,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                     maxWidth = Math.max(maxWidth, width);
                     // FIXME get the attachments <= 10 or return a collection
                     if (filesAttached == 10) {
-                        break OUTER;
+                        action.setEmbeds(embeds);
+                        return "Too many images. Visit the URI";
                     }
 
 
@@ -518,12 +524,13 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
                             maxWidth, resultHeight, readImage.getWidth(), readImage.getHeight(),
                             filesAttached);
                 } catch (IOException e) {
-                    event.reply("Unable to generate message based on the WolframAlpha response")
-                        .setEphemeral(true)
-                        .queue();
+                    /*
+                     * event.reply("Unable to generate message based on the WolframAlpha response")
+                     * .setEphemeral(true) .queue();
+                     */
                     logger.error("Failed to read image {} from the WolframAlpha response", image,
                             e);
-                    return Optional.empty();
+                    return "Unable to generate message based on the WolframAlpha response";
                 }
             }
             logger.info("Exiting pod number {}", i);
@@ -535,7 +542,8 @@ public final class WolframAlphaCommand extends SlashCommandAdapter {
          * .formatted(i)) .toFile()); } catch (IOException e) { e.printStackTrace(); } action =
          * action.addFile(bytes.get(i), names.get(i)); }
          */
-        return Optional.of(action.setEmbeds(embeds));
+        action.setEmbeds(embeds);
+        return "";
     }
 
     private int getWidth(String header) {
