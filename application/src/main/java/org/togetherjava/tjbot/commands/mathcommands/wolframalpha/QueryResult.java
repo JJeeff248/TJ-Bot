@@ -35,11 +35,17 @@ final class QueryResult {
     private boolean parseTimedOut;
     @JacksonXmlProperty(isAttribute = true, localName = "recalculate")
     private String recalculateUrl;
+    @JsonProperty("tips")
     private Tips tips;
+    @JsonProperty("didyoumean")
     private DidYouMeans didYouMeans;
+    @JsonProperty("languagemsg")
     private LanguageMsg languageMsg;
+    @JsonProperty("examplepage")
     private ExamplePage examplePage;
+    @JsonProperty("futuretopic")
     private FutureTopic futureTopic;
+    @JsonProperty("relatedexamples")
     private RelatedExamples relatedExamples;
     @JsonProperty("pod")
     @JacksonXmlElementWrapper(useWrapping = false)
