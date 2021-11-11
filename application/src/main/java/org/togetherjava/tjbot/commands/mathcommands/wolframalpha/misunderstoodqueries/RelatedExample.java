@@ -9,15 +9,15 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 public class RelatedExample {
 
     @JacksonXmlProperty(isAttribute = true)
-    String input;
+    private String input;
     @JacksonXmlProperty(isAttribute = true, localName = "desc")
-    String description;
+    private String description;
     @JacksonXmlProperty(isAttribute = true)
-    String category;
+    private String category;
     @JacksonXmlProperty(isAttribute = true, localName = "categorythumb")
-    String categoryThumb;
+    private String categoryThumb;
     @JacksonXmlProperty(isAttribute = true, localName = "categorypage")
-    String categoryPage;
+    private String categoryPage;
 
     public String getInput() {
         return input;

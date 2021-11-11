@@ -1,7 +1,9 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.ArrayList;
@@ -13,8 +15,11 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Tips {
     @JacksonXmlProperty(isAttribute = true)
-    int count;
-    List<Tip> tips;
+    private int count;
+
+    @JsonProperty("tip")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    private List<Tip> tips;
 
     public int getCount() {
         return count;
@@ -32,11 +37,4 @@ public class Tips {
         this.tips = new ArrayList<>(tips);
     }
 
-    public String toMessage() {
-        if (tips == null || count == 0)
-            return "";
-        StringBuilder sb = new StringBuilder();
-        tips.forEach(x -> sb.append(x).append("\n"));
-        return count + " tips:\n" + sb;
-    }
 }

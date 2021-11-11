@@ -1,7 +1,9 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.List;
@@ -13,9 +15,11 @@ import java.util.Collections;
 public class RelatedExamples {
 
     @JacksonXmlProperty(isAttribute = true)
-    int count;
+    private int count;
 
-    List<RelatedExample> relatedExamples = new ArrayList<>();
+    @JsonProperty("relatedexample")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    private List<RelatedExample> relatedExamples = new ArrayList<>();
 
     public int getCount() {
         return count;

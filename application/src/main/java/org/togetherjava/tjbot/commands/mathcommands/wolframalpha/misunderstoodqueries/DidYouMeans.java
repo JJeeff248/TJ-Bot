@@ -1,7 +1,9 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.ArrayList;
@@ -13,7 +15,11 @@ import java.util.List;
 public class DidYouMeans {
 
     @JacksonXmlProperty(isAttribute = true)
-    int count;
+    private int count;
+
+    @JsonProperty("didyoumean")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    private List<DidYouMean> didYouMeans = new ArrayList<>();
 
     public int getCount() {
         return count;
@@ -31,6 +37,6 @@ public class DidYouMeans {
         this.didYouMeans = new ArrayList<>(didYouMeans);
     }
 
-    List<DidYouMean> didYouMeans = new ArrayList<>();
+
 
 }

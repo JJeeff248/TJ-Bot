@@ -9,7 +9,23 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 public class ExamplePage {
 
     @JacksonXmlProperty(isAttribute = true)
-    String category;
+    private String category;
     @JacksonXmlProperty(isAttribute = true)
-    String url;
+    private String url;
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 }

@@ -9,10 +9,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 public class FutureTopic {
 
     @JacksonXmlProperty(isAttribute = true)
-    String topic;
+    private String topic;
 
     @JacksonXmlProperty(isAttribute = true)
-    String msg;
+    private String msg;
 
     public String getTopic() {
         return topic;

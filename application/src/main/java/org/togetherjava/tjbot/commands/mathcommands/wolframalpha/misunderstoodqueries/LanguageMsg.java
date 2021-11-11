@@ -9,10 +9,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 public class LanguageMsg {
 
     @JacksonXmlProperty(isAttribute = true)
-    String english;
+    private String english;
 
     @JacksonXmlProperty(isAttribute = true)
-    String other;
+    private String other;
 
     public String getEnglish() {
         return english;

@@ -14,7 +14,7 @@ import java.util.List;
 @JsonRootName("queryresult")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @SuppressWarnings("unused")
-final class QueryResult {
+public final class QueryResult {
     @JacksonXmlProperty(isAttribute = true)
     private boolean success;
     @JacksonXmlProperty(isAttribute = true)
@@ -38,7 +38,7 @@ final class QueryResult {
     @JsonProperty("tips")
     @JacksonXmlElementWrapper(useWrapping = false)
     private Tips tips;
-    @JsonProperty("didyoumean")
+    @JsonProperty("didyoumeans")
     @JacksonXmlElementWrapper(useWrapping = false)
     private DidYouMeans didYouMeans;
     @JsonProperty("languagemsg")
@@ -155,5 +155,45 @@ final class QueryResult {
 
     public void setTips(Tips tips) {
         this.tips = tips;
+    }
+
+    public DidYouMeans getDidYouMeans() {
+        return didYouMeans;
+    }
+
+    public void setDidYouMeans(DidYouMeans didYouMeans) {
+        this.didYouMeans = didYouMeans;
+    }
+
+    public LanguageMsg getLanguageMsg() {
+        return languageMsg;
+    }
+
+    public void setLanguageMsg(LanguageMsg languageMsg) {
+        this.languageMsg = languageMsg;
+    }
+
+    public ExamplePage getExamplePage() {
+        return examplePage;
+    }
+
+    public void setExamplePage(ExamplePage examplePage) {
+        this.examplePage = examplePage;
+    }
+
+    public FutureTopic getFutureTopic() {
+        return futureTopic;
+    }
+
+    public void setFutureTopic(FutureTopic futureTopic) {
+        this.futureTopic = futureTopic;
+    }
+
+    public RelatedExamples getRelatedExamples() {
+        return relatedExamples;
+    }
+
+    public void setRelatedExamples(RelatedExamples relatedExamples) {
+        this.relatedExamples = relatedExamples;
     }
 }

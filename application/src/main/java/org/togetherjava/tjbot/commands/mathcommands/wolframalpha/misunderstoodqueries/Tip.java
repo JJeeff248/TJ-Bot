@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Tip {
     @JacksonXmlProperty(isAttribute = true)
-    String text;
+    private String text;
 
     public String getText() {
         return text;

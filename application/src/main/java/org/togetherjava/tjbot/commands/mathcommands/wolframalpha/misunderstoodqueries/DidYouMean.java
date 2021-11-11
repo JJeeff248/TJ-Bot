@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DidYouMean {
 
-    String message;
+    private String message;
 
     public String getMessage() {
         return message;
