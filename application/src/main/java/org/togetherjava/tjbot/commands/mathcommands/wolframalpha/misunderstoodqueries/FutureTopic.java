@@ -4,6 +4,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+/**
+ * <p>
+ * Example Query: Operating Systems <br>
+ * Result: {@code <futuretopic topic='Operating Systems'
+ *      msg='Development of this topic is under investigation...' />}
+ * </p>
+ */
 @JsonRootName("futuretopic")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FutureTopic {

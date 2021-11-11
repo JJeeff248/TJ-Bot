@@ -10,6 +10,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * <p>
+ * Example Query: bhefjuhkynmbtg <br>
+ * Result: <br>
+ * {@code <tips count='1'>
+ *   <tip text='Check your spelling, and use English' />
+ *  </tips>}
+ * </p>
+ */
 @SuppressWarnings("unused")
 @JsonRootName("tips")
 @JsonIgnoreProperties(ignoreUnknown = true)

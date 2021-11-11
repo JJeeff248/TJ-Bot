@@ -10,6 +10,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * <p>
+ *     Example Query: btuyghe
+ *     <br>
+ *     Result: {@code <didyoumeans count='1'>
+ *   <didyoumean score='0.415939' level='medium'>tighe</didyoumean>
+ *  </didyoumeans> }
+ * </p>
+ * */
 @JsonRootName("didyoumeans")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DidYouMeans {

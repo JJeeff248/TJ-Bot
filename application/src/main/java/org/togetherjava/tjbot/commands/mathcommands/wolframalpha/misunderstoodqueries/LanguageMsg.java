@@ -4,6 +4,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+/**
+ *
+ * <p>
+ * Example Query: ¿donde soy tu?<br>
+ * Result: {@code <languagemsg english='Wolfram|Alpha does not yet support Spanish.'
+ *      other='Wolfram|Alpha todavía no entiende español.' />}
+ * </p>
+ */
 @JsonRootName("langugemsg")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LanguageMsg {
