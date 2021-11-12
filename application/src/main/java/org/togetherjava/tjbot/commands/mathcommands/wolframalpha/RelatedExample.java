@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 @JsonRootName("relatedexample")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RelatedExample {
+final class RelatedExample {
 
     @JacksonXmlProperty(isAttribute = true)
     private String input;

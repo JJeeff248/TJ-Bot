@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 @JsonRootName("examplepage")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ExamplePage {
+final class ExamplePage {
 
     @JacksonXmlProperty(isAttribute = true)
     private String category;

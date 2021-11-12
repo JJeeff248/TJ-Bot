@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -13,7 +13,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  */
 @JsonRootName("futuretopic")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FutureTopic {
+final class FutureTopic {
 
     @JacksonXmlProperty(isAttribute = true)
     private String topic;

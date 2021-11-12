@@ -1,6 +1,8 @@
-package org.togetherjava.tjbot.commands.utils;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
+import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.QueryResult;
 import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
+import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries.*;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -9,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public final class WolfCommandUtils {
@@ -56,5 +59,38 @@ public final class WolfCommandUtils {
                     .mapToObj(x -> IntStream.range(0, height1)
                         .anyMatch(y -> img1.getRGB(x, y) != img2.getRGB(x, y)))
                     .noneMatch(x -> x);
+    }
+
+    public static String misunderstoodQueryMessage(QueryResult result) {
+        String out = "";
+        Tips tips = result.getTips();
+        if (tips != null) {
+            out += "Here are some tips \n"
+                    + tips.getTips().stream().map(Tip::getText).collect(Collectors.joining("\n"));
+        }
+        FutureTopic futureTopic = result.getFutureTopic();
+        if (futureTopic != null) {
+            out += "Your query is regarding The topic \"%s\" which might be supported by Wolfram Alpha in the future"
+                .formatted(futureTopic.getTopic());
+        }
+        LanguageMsg languageMsg = result.getLanguageMsg();
+        if (languageMsg != null) {
+            out += languageMsg.getEnglish() + "\n" + languageMsg.getEnglish();
+        }
+        DidYouMeans didYouMeans = result.getDidYouMeans();
+        if (didYouMeans != null) {
+            out += "Did you mean \n" + didYouMeans.getDidYouMeans()
+                .stream()
+                .map(DidYouMean::getMessage)
+                .collect(Collectors.joining("\n"));
+        }
+        RelatedExamples relatedExamples = result.getRelatedExamples();
+        if (relatedExamples != null) {
+            out += "Here are some related examples \n" + relatedExamples.getRelatedExamples()
+                .stream()
+                .map(RelatedExample::getCategoryThumb)
+                .collect(Collectors.joining("\n"));
+        }
+        return out;
     }
 }

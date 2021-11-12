@@ -1,4 +1,4 @@
-package org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries;
+package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +12,7 @@ import java.util.Collections;
 
 @JsonRootName("relatedexamples")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RelatedExamples {
+final class RelatedExamples {
 
     @JacksonXmlProperty(isAttribute = true)
     private int count;
