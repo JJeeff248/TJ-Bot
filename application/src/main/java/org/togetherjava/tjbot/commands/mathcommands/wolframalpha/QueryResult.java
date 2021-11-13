@@ -35,25 +35,18 @@ final class QueryResult {
     @JacksonXmlProperty(isAttribute = true, localName = "recalculate")
     private String recalculateUrl;
     @JsonProperty("tips")
-    @JacksonXmlElementWrapper(useWrapping = false)
     private Tips tips;
     @JsonProperty("didyoumeans")
-    @JacksonXmlElementWrapper(useWrapping = false)
     private DidYouMeans didYouMeans;
     @JsonProperty("languagemsg")
-    @JacksonXmlElementWrapper(useWrapping = false)
     private LanguageMsg languageMsg;
     @JsonProperty("examplepage")
-    @JacksonXmlElementWrapper(useWrapping = false)
     private ExamplePage examplePage;
     @JsonProperty("futuretopic")
-    @JacksonXmlElementWrapper(useWrapping = false)
     private FutureTopic futureTopic;
     @JsonProperty("relatedexamples")
-    @JacksonXmlElementWrapper(useWrapping = false)
     private RelatedExamples relatedExamples;
     @JsonProperty("pod")
-    @JacksonXmlElementWrapper(useWrapping = false)
     private List<Pod> pods;
 
     public boolean isSuccess() {
