@@ -13,18 +13,22 @@ final class ExamplePage {
     @JacksonXmlProperty(isAttribute = true)
     private String url;
 
+    @SuppressWarnings("unused")
     public String getCategory() {
         return category;
     }
 
+    @SuppressWarnings("unused")
     public void setCategory(String category) {
         this.category = category;
     }
 
+    @SuppressWarnings("unused")
     public String getUrl() {
         return url;
     }
 
+    @SuppressWarnings("unused")
     public void setUrl(String url) {
         this.url = url;
     }

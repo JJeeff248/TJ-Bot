@@ -7,7 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 @JsonRootName("subpod")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@SuppressWarnings("unused")
+
 final class SubPod {
     @JacksonXmlProperty(isAttribute = true)
     private String title;
@@ -17,10 +17,12 @@ final class SubPod {
     @JsonProperty("plaintext")
     private PlainText plainText;
 
+    @SuppressWarnings("unused")
     public String getTitle() {
         return title;
     }
 
+    @SuppressWarnings("unused")
     public void setTitle(String title) {
         this.title = title;
     }

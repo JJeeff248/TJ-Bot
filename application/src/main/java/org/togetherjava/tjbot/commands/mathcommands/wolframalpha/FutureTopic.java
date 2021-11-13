@@ -25,14 +25,17 @@ final class FutureTopic {
         return topic;
     }
 
+    @SuppressWarnings("unused")
     public void setTopic(String topic) {
         this.topic = topic;
     }
 
+    @SuppressWarnings("unused")
     public String getMsg() {
         return msg;
     }
 
+    @SuppressWarnings("unused")
     public void setMsg(String msg) {
         this.msg = msg;
     }

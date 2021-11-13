@@ -3,7 +3,6 @@ package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ import java.util.List;
 
 @JsonRootName("queryresult")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@SuppressWarnings("unused")
 final class QueryResult {
     @JacksonXmlProperty(isAttribute = true)
     private boolean success;
@@ -53,98 +51,117 @@ final class QueryResult {
         return success;
     }
 
-    public boolean isError() {
-        return error;
-    }
-
-    public int getNumberOfPods() {
-        return numberOfPods;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public String getDataTypes() {
-        return dataTypes;
-    }
-
-    public double getTiming() {
-        return timing;
-    }
-
-    public String getTimedOutPods() {
-        return timedOutPods;
-    }
-
-    public int getNumberOfTimedOutPods() {
-        return timedOutPods.isEmpty() ? 0 : timedOutPods.split(",").length;
-    }
-
-    public double getParseTiming() {
-        return parseTiming;
-    }
-
-    public boolean isParseTimedOut() {
-        return parseTimedOut;
-    }
-
-    public String getRecalculateUrl() {
-        return recalculateUrl;
-    }
-
-    public List<Pod> getPods() {
-        return Collections.unmodifiableList(pods);
-    }
-
-    public Tips getTips() {
-        return tips;
-    }
-
+    @SuppressWarnings("unused")
     public void setSuccess(boolean success) {
         this.success = success;
+    }
+
+    public boolean isError() {
+        return error;
     }
 
     public void setError(boolean error) {
         this.error = error;
     }
 
+    @SuppressWarnings("unused")
+    public int getNumberOfPods() {
+        return numberOfPods;
+    }
+
+    @SuppressWarnings("unused")
     public void setNumberOfPods(int numberOfPods) {
         this.numberOfPods = numberOfPods;
     }
 
+    @SuppressWarnings("unused")
+    public String getVersion() {
+        return version;
+    }
+
+    @SuppressWarnings("unused")
     public void setVersion(String version) {
         this.version = version;
     }
 
+    @SuppressWarnings("unused")
+    public String getDataTypes() {
+        return dataTypes;
+    }
+
+    @SuppressWarnings("unused")
     public void setDataTypes(String dataTypes) {
         this.dataTypes = dataTypes;
     }
 
+    @SuppressWarnings("unused")
+    public double getTiming() {
+        return timing;
+    }
+
+    @SuppressWarnings("unused")
     public void setTiming(double timing) {
         this.timing = timing;
     }
 
+    @SuppressWarnings("unused")
+    public String getTimedOutPods() {
+        return timedOutPods;
+    }
+
+    @SuppressWarnings("unused")
     public void setTimedOutPods(String timedOutPods) {
         this.timedOutPods = timedOutPods;
     }
 
+    public int getNumberOfTimedOutPods() {
+        return timedOutPods.isEmpty() ? 0 : timedOutPods.split(",").length;
+    }
+
+    @SuppressWarnings("unused")
+    public double getParseTiming() {
+        return parseTiming;
+    }
+
+    @SuppressWarnings("unused")
     public void setParseTiming(double parseTiming) {
         this.parseTiming = parseTiming;
     }
 
+    @SuppressWarnings("unused")
+    public boolean isParseTimedOut() {
+        return parseTimedOut;
+    }
+
+    @SuppressWarnings("unused")
     public void setParseTimedOut(boolean parseTimedOut) {
         this.parseTimedOut = parseTimedOut;
     }
 
+    @SuppressWarnings("unused")
+    public String getRecalculateUrl() {
+        return recalculateUrl;
+    }
+
+    @SuppressWarnings("unused")
     public void setRecalculateUrl(String recalculateUrl) {
         this.recalculateUrl = recalculateUrl;
     }
 
+    public List<Pod> getPods() {
+        return Collections.unmodifiableList(pods);
+    }
+
+    @SuppressWarnings("unused")
     public void setPods(List<Pod> pods) {
         this.pods = new ArrayList<>(pods);
     }
 
+    public Tips getTips() {
+        return tips;
+    }
+
+    @SuppressWarnings("unused")
     public void setTips(Tips tips) {
         this.tips = tips;
     }
@@ -153,6 +170,7 @@ final class QueryResult {
         return didYouMeans;
     }
 
+    @SuppressWarnings("unused")
     public void setDidYouMeans(DidYouMeans didYouMeans) {
         this.didYouMeans = didYouMeans;
     }
@@ -161,30 +179,37 @@ final class QueryResult {
         return languageMsg;
     }
 
+    @SuppressWarnings("unused")
     public void setLanguageMsg(LanguageMsg languageMsg) {
         this.languageMsg = languageMsg;
     }
 
+    @SuppressWarnings("unused")
     public ExamplePage getExamplePage() {
         return examplePage;
     }
 
+    @SuppressWarnings("unused")
     public void setExamplePage(ExamplePage examplePage) {
         this.examplePage = examplePage;
     }
 
+    @SuppressWarnings("unused")
     public FutureTopic getFutureTopic() {
         return futureTopic;
     }
 
+    @SuppressWarnings("unused")
     public void setFutureTopic(FutureTopic futureTopic) {
         this.futureTopic = futureTopic;
     }
 
+    @SuppressWarnings("unused")
     public RelatedExamples getRelatedExamples() {
         return relatedExamples;
     }
 
+    @SuppressWarnings("unused")
     public void setRelatedExamples(RelatedExamples relatedExamples) {
         this.relatedExamples = relatedExamples;
     }

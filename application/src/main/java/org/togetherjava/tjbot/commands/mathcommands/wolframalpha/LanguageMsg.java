@@ -26,6 +26,7 @@ final class LanguageMsg {
         return english;
     }
 
+    @SuppressWarnings("unused")
     public void setEnglish(String english) {
         this.english = english;
     }
@@ -34,6 +35,7 @@ final class LanguageMsg {
         return other;
     }
 
+    @SuppressWarnings("unused")
     public void setOther(String other) {
         this.other = other;
     }

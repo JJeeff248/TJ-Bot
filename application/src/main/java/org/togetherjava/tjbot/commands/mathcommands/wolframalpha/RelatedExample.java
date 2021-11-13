@@ -19,42 +19,52 @@ final class RelatedExample {
     @JacksonXmlProperty(isAttribute = true, localName = "categorypage")
     private String categoryPage;
 
+    @SuppressWarnings("unused")
     public String getInput() {
         return input;
     }
 
+    @SuppressWarnings("unused")
     public void setInput(String input) {
         this.input = input;
     }
 
+    @SuppressWarnings("unused")
     public String getDescription() {
         return description;
     }
 
+    @SuppressWarnings("unused")
     public void setDescription(String description) {
         this.description = description;
     }
 
+    @SuppressWarnings("unused")
     public String getCategory() {
         return category;
     }
 
+    @SuppressWarnings("unused")
     public void setCategory(String category) {
         this.category = category;
     }
 
+    @SuppressWarnings("unused")
     public String getCategoryThumb() {
         return categoryThumb;
     }
 
+    @SuppressWarnings("unused")
     public void setCategoryThumb(String categoryThumb) {
         this.categoryThumb = categoryThumb;
     }
 
+    @SuppressWarnings("unused")
     public String getCategoryPage() {
         return categoryPage;
     }
 
+    @SuppressWarnings("unused")
     public void setCategoryPage(String categoryPage) {
         this.categoryPage = categoryPage;
     }

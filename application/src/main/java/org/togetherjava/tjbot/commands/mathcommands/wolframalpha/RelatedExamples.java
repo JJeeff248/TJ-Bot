@@ -21,10 +21,12 @@ final class RelatedExamples {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<RelatedExample> relatedExamples = new ArrayList<>();
 
+    @SuppressWarnings("unused")
     public int getCount() {
         return count;
     }
 
+    @SuppressWarnings("unused")
     public void setCount(int count) {
         this.count = count;
     }
@@ -33,6 +35,7 @@ final class RelatedExamples {
         return Collections.unmodifiableList(relatedExamples);
     }
 
+    @SuppressWarnings("unused")
     public void setRelatedExamples(List<RelatedExample> relatedExamples) {
         this.relatedExamples = new ArrayList<>(relatedExamples);
     }

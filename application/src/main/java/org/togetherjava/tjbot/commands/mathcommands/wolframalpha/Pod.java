@@ -13,7 +13,6 @@ import java.util.List;
 
 @JsonRootName("pod")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@SuppressWarnings("unused")
 final class Pod {
     @JacksonXmlProperty(isAttribute = true)
     private String title;
@@ -36,6 +35,7 @@ final class Pod {
         return title;
     }
 
+    @SuppressWarnings("unused")
     public void setTitle(String title) {
         this.title = title;
     }
@@ -48,34 +48,42 @@ final class Pod {
         this.error = error;
     }
 
+    @SuppressWarnings("unused")
     public int getPosition() {
         return position;
     }
 
+    @SuppressWarnings("unused")
     public void setPosition(int position) {
         this.position = position;
     }
 
+    @SuppressWarnings("unused")
     public String getScanner() {
         return scanner;
     }
 
+    @SuppressWarnings("unused")
     public void setScanner(String scanner) {
         this.scanner = scanner;
     }
 
+    @SuppressWarnings("unused")
     public String getId() {
         return id;
     }
 
+    @SuppressWarnings("unused")
     public void setId(String id) {
         this.id = id;
     }
 
+    @SuppressWarnings("unused")
     public int getNumberOfSubPods() {
         return numberOfSubPods;
     }
 
+    @SuppressWarnings("unused")
     public void setNumberOfSubPods(int numberOfSubPods) {
         this.numberOfSubPods = numberOfSubPods;
     }
@@ -84,6 +92,7 @@ final class Pod {
         return Collections.unmodifiableList(subPods);
     }
 
+    @SuppressWarnings("unused")
     public void setSubPods(List<SubPod> subPods) {
         this.subPods = new ArrayList<>(subPods);
     }

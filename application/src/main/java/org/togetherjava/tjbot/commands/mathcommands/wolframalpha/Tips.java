@@ -19,7 +19,6 @@ import java.util.List;
  *  </tips>}
  * </p>
  */
-@SuppressWarnings("unused")
 @JsonRootName("tips")
 @JsonIgnoreProperties(ignoreUnknown = true)
 final class Tips {
@@ -30,18 +29,22 @@ final class Tips {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<Tip> tips;
 
+    @SuppressWarnings("unused")
     public int getCount() {
         return count;
     }
 
+    @SuppressWarnings("unused")
     public void setCount(int count) {
         this.count = count;
     }
 
+    @SuppressWarnings("unused")
     public List<Tip> getTips() {
         return Collections.unmodifiableList(tips);
     }
 
+    @SuppressWarnings("unused")
     public void setTips(List<Tip> tips) {
         this.tips = new ArrayList<>(tips);
     }

@@ -7,7 +7,6 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 @JsonRootName("img")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@SuppressWarnings("unused")
 final class WolfImage {
     @JacksonXmlProperty(isAttribute = true, localName = "src")
     private String source;
@@ -22,6 +21,7 @@ final class WolfImage {
         return title;
     }
 
+    @SuppressWarnings("unused")
     public void setTitle(String title) {
         this.title = title;
     }
@@ -30,14 +30,17 @@ final class WolfImage {
         return source;
     }
 
+    @SuppressWarnings("unused")
     public void setSource(String source) {
         this.source = source;
     }
 
+    @SuppressWarnings("unused")
     public int getWidth() {
         return width;
     }
 
+    @SuppressWarnings("unused")
     public void setWidth(int width) {
         this.width = width;
     }
@@ -46,6 +49,7 @@ final class WolfImage {
         return height;
     }
 
+    @SuppressWarnings("unused")
     public void setHeight(int height) {
         this.height = height;
     }

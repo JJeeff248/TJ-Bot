@@ -29,10 +29,12 @@ final class DidYouMeans {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<DidYouMean> didYouMeans = new ArrayList<>();
 
+    @SuppressWarnings("unused")
     public int getCount() {
         return count;
     }
 
+    @SuppressWarnings("unused")
     public void setCount(int count) {
         this.count = count;
     }
@@ -41,6 +43,7 @@ final class DidYouMeans {
         return Collections.unmodifiableList(didYouMeans);
     }
 
+    @SuppressWarnings("unused")
     public void setDidYouMeans(List<DidYouMean> didYouMeans) {
         this.didYouMeans = new ArrayList<>(didYouMeans);
     }
