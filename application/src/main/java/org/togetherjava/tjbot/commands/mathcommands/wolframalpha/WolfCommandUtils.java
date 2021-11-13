@@ -1,9 +1,5 @@
 package org.togetherjava.tjbot.commands.mathcommands.wolframalpha;
 
-import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.QueryResult;
-import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.WolframAlphaCommand;
-import org.togetherjava.tjbot.commands.mathcommands.wolframalpha.misunderstoodqueries.*;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
