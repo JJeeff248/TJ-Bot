@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -57,36 +58,40 @@ public final class WolfCommandUtils {
                     .noneMatch(x -> x);
     }
 
-    public static String misunderstoodQueryMessage(QueryResult result) {
-        String out = "";
+    public static String handleMisunderstoodQuery(QueryResult result) {
+        List<String> output = new ArrayList<>();
+        output
+            .add("The Wolfram|Alpha API was unable to produce a successful result. Visit the URI");
         Tips tips = result.getTips();
         if (tips != null) {
-            out += "Here are some tips \n"
-                    + tips.getTips().stream().map(Tip::getText).collect(Collectors.joining("\n"));
+            output.add("Here are some tips \n"
+                    + tips.getTips().stream().map(Tip::getText).collect(Collectors.joining("\n")));
         }
         FutureTopic futureTopic = result.getFutureTopic();
         if (futureTopic != null) {
-            out += "Your query is regarding The topic \"%s\" which might be supported by Wolfram Alpha in the future"
-                .formatted(futureTopic.getTopic());
+            output.add(
+                    "Your query is regarding The topic \"%s\" which might be supported by Wolfram Alpha in the future"
+                        .formatted(futureTopic.getTopic()));
         }
         LanguageMsg languageMsg = result.getLanguageMsg();
         if (languageMsg != null) {
-            out += languageMsg.getEnglish() + "\n" + languageMsg.getEnglish();
+            output.add(languageMsg.getEnglish() + "\n" + languageMsg.getOther());
         }
         DidYouMeans didYouMeans = result.getDidYouMeans();
         if (didYouMeans != null) {
-            out += "Did you mean \n" + didYouMeans.getDidYouMeans()
+            output.add("Did you mean \n" + didYouMeans.getDidYouMeans()
                 .stream()
                 .map(DidYouMean::getMessage)
-                .collect(Collectors.joining("\n"));
+                .collect(Collectors.joining("\n")));
         }
         RelatedExamples relatedExamples = result.getRelatedExamples();
         if (relatedExamples != null) {
-            out += "Here are some related examples \n" + relatedExamples.getRelatedExamples()
+            output.add("Here are some related examples \n" + relatedExamples.getRelatedExamples()
                 .stream()
                 .map(RelatedExample::getCategoryThumb)
-                .collect(Collectors.joining("\n"));
+                .collect(Collectors.joining("\n")));
         }
-        return out;
+        WolframAlphaCommand.logger.info("Error Message \n {}", String.join("\n", output));
+        return String.join("\n", output);
     }
 }
