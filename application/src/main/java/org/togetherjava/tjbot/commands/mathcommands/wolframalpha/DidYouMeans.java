@@ -27,7 +27,7 @@ final class DidYouMeans {
 
     @JsonProperty("didyoumean")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<DidYouMean> didYouMeans = new ArrayList<>();
+    private List<DidYouMean> didYouMeans;
 
     @SuppressWarnings("unused")
     public int getCount() {

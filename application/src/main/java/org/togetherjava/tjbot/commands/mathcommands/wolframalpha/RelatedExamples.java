@@ -19,7 +19,7 @@ final class RelatedExamples {
 
     @JsonProperty("relatedexample")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<RelatedExample> relatedExamples = new ArrayList<>();
+    private List<RelatedExample> relatedExamples;
 
     @SuppressWarnings("unused")
     public int getCount() {
