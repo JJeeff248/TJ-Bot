@@ -37,7 +37,7 @@ final class QueryResult {
     @JsonProperty("didyoumeans")
     private DidYouMeans didYouMeans;
     @JsonProperty("languagemsg")
-    private LanguageMsg languageMsg;
+    private LanguageMessage languageMessage;
     @JsonProperty("examplepage")
     private ExamplePage examplePage;
     @JsonProperty("futuretopic")
@@ -175,13 +175,13 @@ final class QueryResult {
         this.didYouMeans = didYouMeans;
     }
 
-    public LanguageMsg getLanguageMsg() {
-        return languageMsg;
+    public LanguageMessage getLanguageMessage() {
+        return languageMessage;
     }
 
     @SuppressWarnings("unused")
-    public void setLanguageMsg(LanguageMsg languageMsg) {
-        this.languageMsg = languageMsg;
+    public void setLanguageMessage(LanguageMessage languageMessage) {
+        this.languageMessage = languageMessage;
     }
 
     @SuppressWarnings("unused")

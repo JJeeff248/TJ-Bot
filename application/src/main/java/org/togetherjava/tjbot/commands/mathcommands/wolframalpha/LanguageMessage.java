@@ -14,7 +14,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
  */
 @JsonRootName("langugemsg")
 @JsonIgnoreProperties(ignoreUnknown = true)
-final class LanguageMsg {
+final class LanguageMessage {
 
     @JacksonXmlProperty(isAttribute = true)
     private String english;
